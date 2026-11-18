@@ -1,0 +1,75 @@
+---
+import SectionHeading from "../ui/SectionHeading.astro";
+import Button from "../ui/Button.astro";
+import Pic from "../ui/Pic.astro";
+import Icon from "../ui/Icon.astro";
+import { services } from "../../content/home";
+---
+
+<section id={services.id} aria-labelledby="services-title" class="bg-metal py-20 lg:py-28">
+  <div class="container-x">
+    <SectionHeading id="services-title" title={services.title} description={services.description} />
+
+    <div class="mt-14 flex flex-col gap-16 lg:mt-20 lg:gap-24">
+      {
+        services.items.map((s, i) => {
+          const flip = i % 2 === 1; // alternate: image left / image right
+          return (
+            <div class="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+              <!-- 3D render slot -->
+              <figure data-reveal class:list={["m-0", flip && "lg:order-2"]}>
+                <div class="relative aspect-[4/3] overflow-hidden rounded-3xl border border-cinza bg-white shadow-[0_24px_48px_-28px_rgba(10,10,10,0.3)]">
+                  {s.render.image ? (
+                    <Pic
+                      src={s.render.image}
+                      alt={s.render.alt}
+                      widths={[640, 960, 1400]}
+                      sizes="(min-width: 1024px) 640px, 100vw"
+                      class="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      role="img"
+                      aria-label={s.render.placeholder}
+                      class="flex h-full w-full flex-col items-center justify-center gap-3 bg-[linear-gradient(rgba(52,52,52,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(52,52,52,0.06)_1px,transparent_1px)] bg-[length:32px_32px] bg-center text-carbon/55"
+                    >
+                      <span class="flex h-14 w-14 items-center justify-center rounded-2xl border border-cinza bg-white text-azul shadow-sm">
+                        <Icon name="cube" size={26} />
+                      </span>
+                      <span class="text-sm font-medium">{s.render.placeholder}</span>
+                    </div>
+                  )}
+                </div>
+                <figcaption class="mt-3 text-sm text-carbon/60">{s.render.caption}</figcaption>
+              </figure>
+
+              <!-- copy -->
+              <div data-reveal style="--d:120ms" class:list={[flip && "lg:order-1"]}>
+                <p class="text-[13px] font-semibold uppercase tracking-[0.14em] text-azul">{s.category}</p>
+                <h3 class="mt-3 font-display text-4xl font-medium leading-[1.08] tracking-[-0.02em] text-carbon lg:text-[44px]">
+                  {s.title}
+                </h3>
+                <p class="mt-4 max-w-[520px] text-lg leading-[1.55] text-carbon/75">{s.description}</p>
+
+                <ul class="mt-6 space-y-3.5">
+                  {s.bullets.map((b) => (
+                    <li class="flex items-start gap-3 text-base text-carbon">
+                      <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-azul/10 text-azul">
+                        <Icon name="check" size={14} strokeWidth={2.4} />
+                      </span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+
+                <Button href={s.cta.href} interest={s.cta.interest} icon={s.cta.icon} size="lg" class="mt-9">
+                  {s.cta.label}
+                </Button>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+</section>

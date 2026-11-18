@@ -1,0 +1,171 @@
+---
+import { Image } from "astro:assets";
+
+interface Slide {
+  src: ImageMetadata;
+  alt: string;
+}
+
+interface Props {
+  slides: Slide[];
+  /** ms between automatic slides */
+  interval?: number;
+  class?: string;
+  label?: string;
+  dotLabel?: string;
+}
+
+const { slides, interval = 3500, class: className = "", label = "Equipos", dotLabel = "Ver imagen" } = Astro.props;
+---
+
+<div
+  data-carousel
+  data-interval={interval}
+  role="region"
+  aria-roledescription="carousel"
+  aria-label={label}
+  class:list={["hero-carousel", className]}
+>
+  <!-- Viewport: only ONE image visible, clipped at the edges -->
+  <div class="relative h-[320px] overflow-hidden sm:h-[460px] lg:h-[616px]">
+    {
+      slides.map((s, i) => (
+        <div
+          data-slide
+          data-state={i === 0 ? "active" : "wait"}
+          aria-hidden={i === 0 ? "false" : "true"}
+          class="hc-slide absolute inset-x-0 bottom-4 top-0 lg:inset-x-[45px]"
+        >
+          <!-- soft elliptical ground shadow -->
+          <span
+            aria-hidden="true"
+            class="absolute -bottom-4 left-1/2 h-8 w-[84%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(2,8,23,0.5)_0%,rgba(2,8,23,0.22)_45%,rgba(2,8,23,0)_72%)] blur-[5px]"
+          />
+          <Image
+            src={s.src}
+            alt={s.alt}
+            widths={[480, 620, 1240]}
+            sizes="(min-width: 1024px) 620px, 100vw"
+            loading={i === 0 ? "eager" : "lazy"}
+            class="absolute inset-0 h-full w-full object-contain object-bottom"
+          />
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- Dots: active = azul + elongated (24px), others = onix -->
+  <div class="flex h-10 items-center justify-center">
+    {
+      slides.map((_, i) => (
+        <button
+          type="button"
+          data-dot={i}
+          aria-label={`${dotLabel} ${i + 1}`}
+          aria-current={i === 0 ? "true" : "false"}
+          class="flex h-10 items-center px-1.5 focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-azul"
+        >
+          <span
+            data-pip
+            data-active={i === 0 ? "true" : "false"}
+            class="block h-2 w-2 rounded-full bg-onix transition-[width,background-color] duration-300 data-[active=true]:w-6 data-[active=true]:bg-azul"
+          />
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  /* slide / fade, 120px, 700ms ease-in-out (plain CSS so it works on Tailwind v3 and v4) */
+  .hc-slide {
+    pointer-events: none;
+    transition:
+      transform 700ms ease-in-out,
+      opacity 700ms ease-in-out;
+    will-change: transform, opacity;
+  }
+  .hc-slide[data-state="active"] {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  .hc-slide[data-state="out"] {
+    transform: translateX(120px);
+    opacity: 0;
+  }
+  .hc-slide[data-state="wait"] {
+    transform: translateX(-120px);
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hc-slide {
+      transition: opacity 200ms linear;
+      transform: none !important;
+    }
+  }
+</style>
+
+<script>
+  function initCarousel(root: HTMLElement) {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-slide]"));
+    const dots = Array.from(root.querySelectorAll<HTMLElement>("[data-dot]"));
+    const n = slides.length;
+    if (n < 2) return;
+
+    const interval = Number(root.dataset.interval) || 3500;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let cur = 0; // visible slide
+    let prev = -1; // slide that is leaving (goes out to the right)
+    let timer: number | undefined;
+    let paused = false;
+
+    const render = () => {
+      slides.forEach((s, i) => {
+        s.dataset.state = i === cur ? "active" : i === prev ? "out" : "wait";
+        s.setAttribute("aria-hidden", String(i !== cur));
+      });
+      dots.forEach((d, i) => {
+        d.setAttribute("aria-current", String(i === cur));
+        d.querySelector("[data-pip]")?.setAttribute("data-active", String(i === cur));
+      });
+    };
+
+    const go = (j: number) => {
+      if (j === cur) return;
+      prev = cur;
+      cur = j;
+      render();
+    };
+
+    const stop = () => {
+      if (timer) window.clearInterval(timer);
+      timer = undefined;
+    };
+    const start = () => {
+      stop();
+      if (reduceMotion) return;
+      timer = window.setInterval(() => {
+        if (!paused) go((cur + 1) % n);
+      }, interval);
+    };
+
+    // pause on hover / keyboard focus
+    root.addEventListener("mouseenter", () => (paused = true));
+    root.addEventListener("mouseleave", () => (paused = false));
+    root.addEventListener("focusin", () => (paused = true));
+    root.addEventListener("focusout", () => (paused = false));
+
+    dots.forEach((d, i) =>
+      d.addEventListener("click", () => {
+        go(i);
+        start(); // restart the timer so it does not jump right after a click
+      })
+    );
+
+    render();
+    start();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-carousel]").forEach(initCarousel);
+</script>

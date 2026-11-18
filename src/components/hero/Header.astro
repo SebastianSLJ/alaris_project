@@ -1,0 +1,126 @@
+---
+import { Image } from "astro:assets";
+import logo from "../../assets/hero/logo-light.png"; // light logo version (the pill is black)
+import { nav } from "../../content/home";
+
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  links?: NavLink[];
+  ctaHref?: string;
+  ctaLabel?: string;
+}
+
+const { links = nav.links, ctaHref = nav.cta.href, ctaLabel = nav.cta.label } = Astro.props;
+
+const linkClass =
+  "text-sm font-medium text-white transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+---
+
+<!--
+  Floating pill header. `fixed` => it stays visible on scroll (sticky behaviour).
+  The wrapper ignores pointer events so it never blocks clicks on the page.
+-->
+<header data-site-header data-label-open={nav.openMenu} data-label-close={nav.closeMenu} class="pointer-events-none fixed inset-x-0 top-4 z-50 px-4 lg:top-6">
+  <div class="pointer-events-auto relative mx-auto max-w-[1200px]">
+    <div
+      class="flex h-[60px] items-center justify-between rounded-full bg-negro pl-5 pr-2 shadow-[0_10px_30px_rgba(0,0,0,0.18)] lg:pl-7 lg:pr-3"
+    >
+      <!-- Logo: 32px on mobile, 36px on desktop -->
+      <a href="/" aria-label={nav.homeLabel} class="shrink-0">
+        <Image src={logo} alt="Alaris Médica" height={72} loading="eager" class="block h-8 w-auto lg:h-9" />
+      </a>
+
+      <!-- Desktop: [links] [Login] [CTA] -->
+      <div class="hidden items-center gap-6 lg:flex">
+        <nav aria-label={nav.mainLabel}>
+          <ul class="flex items-center gap-7">
+            {
+              links.map((l) => (
+                <li>
+                  <a href={l.href} class={linkClass}>
+                    {l.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        <a
+          href={ctaHref}
+          class="inline-flex h-10 items-center rounded-full bg-azul px-5 text-sm font-medium text-white transition-colors hover:bg-azul-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          {ctaLabel}
+        </a>
+      </div>
+
+      <!-- Mobile: hamburger -->
+      <button
+        type="button"
+        data-menu-button
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label={nav.openMenu}
+        class="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:hidden"
+      >
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.75" stroke-linecap="round">
+          <path d="M3 5.5h14M3 10h14M3 14.5h14"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile: dropdown card below the pill -->
+    <div
+      id="mobile-menu"
+      hidden
+      class="absolute inset-x-0 top-full mt-2 rounded-3xl bg-negro px-6 pb-5 pt-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)] lg:hidden"
+    >
+      <ul>
+        {
+          links.map((l) => (
+            <li>
+              <a href={l.href} class="flex h-11 items-center text-base font-medium text-white transition-opacity hover:opacity-70">
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="my-2 h-px bg-cinza/20"></div>
+      <a
+        href={ctaHref}
+        class="mt-2 flex h-11 w-full items-center justify-center rounded-full bg-azul text-sm font-medium text-white transition-colors hover:bg-azul-dark"
+      >
+        {ctaLabel}
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  const button = header?.querySelector<HTMLButtonElement>("[data-menu-button]");
+  const menu = header?.querySelector<HTMLElement>("#mobile-menu");
+
+  if (header && button && menu) {
+    const setOpen = (open: boolean) => {
+      menu.hidden = !open;
+      button.setAttribute("aria-expanded", String(open));
+      button.setAttribute("aria-label", (open ? header.dataset.labelClose : header.dataset.labelOpen) ?? "");
+    };
+
+    button.addEventListener("click", () => setOpen(menu.hidden));
+    menu.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest("a")) setOpen(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setOpen(false);
+    });
+    window.matchMedia("(min-width: 1024px)").addEventListener("change", (e) => {
+      if (e.matches) setOpen(false);
+    });
+  }
+</script>

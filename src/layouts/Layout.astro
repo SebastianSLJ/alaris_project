@@ -1,0 +1,43 @@
+---
+import "../styles/global.css";
+import Header from "../components/hero/Header.astro";
+import Footer from "../components/sections/Footer.astro";
+import WhatsAppButton from "../components/ui/WhatsAppButton.astro";
+import { site } from "../content/home";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = site.title, description = site.description } = Astro.props;
+---
+
+<!doctype html>
+<html lang={site.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0a0a0a" />
+    <!-- lets CSS hide [data-reveal] elements only when JS will be able to show them again -->
+    <script is:inline>
+      document.documentElement.classList.add("js");
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500&display=swap"
+    />
+  </head>
+  <body class="bg-white font-sans text-carbon antialiased">
+    <Header />
+    <slot />
+    <Footer />
+    <WhatsAppButton />
+    <script>
+      import "../scripts/reveal.ts";
+    </script>
+  </body>
+</html>

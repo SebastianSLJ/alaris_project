@@ -1,0 +1,79 @@
+---
+interface Logo {
+  name: string;
+  /** Path/URL of the real logo (SVG/PNG). If missing, `name` is rendered as a text placeholder. */
+  src?: string;
+  /** Only for text placeholders */
+  font?: string;
+}
+
+interface Props {
+  logos: Logo[];
+  label?: string;
+  class?: string;
+}
+
+const { logos, label = "Trusted by", class: className = "" } = Astro.props;
+
+// The list is rendered twice => seamless loop (translateX(-50%))
+const sets = [false, true];
+---
+
+<section aria-label={label} class:list={["mx-auto w-[calc(100%-2rem)] max-w-[880px]", className]}>
+  <p class="mb-3 text-center text-xs font-medium uppercase tracking-[0.12em] text-onix">{label}</p>
+
+  <!-- 880px container, 48px tall, edges faded with a mask -->
+  <div class="lm-view h-12 overflow-hidden">
+    <div class="lm-track flex w-max items-center text-carbon opacity-70">
+      {
+        sets.map((isCopy) => (
+          <ul class="flex shrink-0 items-center gap-14 pr-14" aria-hidden={isCopy ? "true" : undefined}>
+            {logos.map((l) => (
+              <li class="flex h-6 items-center md:h-7">
+                {l.src ? (
+                  /* real logo: forced to monochrome Carbon (the track already applies 70% opacity) */
+                  <img
+                    src={l.src}
+                    alt={isCopy ? "" : l.name}
+                    loading="lazy"
+                    class="h-6 w-auto max-w-none [filter:brightness(0)_invert(0.2)] md:h-7"
+                  />
+                ) : (
+                  <span class="whitespace-nowrap text-2xl leading-none" style={l.font ? `font-family:${l.font}` : undefined}>
+                    {l.name}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .lm-view {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  }
+  .lm-track {
+    animation: lm-scroll 30s linear infinite; /* right -> left */
+  }
+  .lm-view:hover .lm-track {
+    animation-play-state: paused;
+  }
+  @keyframes lm-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lm-track {
+      animation: none;
+    }
+  }
+</style>

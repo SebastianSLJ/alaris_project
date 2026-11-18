@@ -1,0 +1,66 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  href?: string;
+  variant?: "primary" | "light" | "outline";
+  size?: "md" | "lg";
+  /** leading icon */
+  icon?: string;
+  /** trailing icon (default: arrow). Pass `null` to hide it. */
+  iconEnd?: string | null;
+  /** preselects the "Interés" field in the contact form when clicked */
+  interest?: string;
+  class?: string;
+  [attr: string]: unknown;
+}
+
+const {
+  href,
+  variant = "primary",
+  size = "md",
+  icon,
+  iconEnd = "arrow-up-right",
+  interest,
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const Tag = href ? "a" : "button";
+
+const variants = {
+  primary:
+    "bg-azul text-white shadow-[0_8px_20px_rgba(0,92,255,0.28)] hover:-translate-y-0.5 hover:bg-azul-dark hover:shadow-[0_12px_28px_rgba(0,92,255,0.38)] active:translate-y-0",
+  light: "bg-white text-carbon hover:-translate-y-0.5 hover:bg-metal",
+  outline: "border border-cinza bg-white text-carbon hover:border-carbon",
+};
+const sizes = {
+  md: "h-12 px-5 text-[15px]",
+  lg: "h-14 px-7 text-base",
+};
+---
+
+<Tag
+  href={href}
+  type={href ? undefined : "button"}
+  data-interest={interest}
+  class:list={[
+    "group inline-flex items-center justify-center gap-2.5 rounded-xl font-medium transition-all duration-200 focus-visible:outline-offset-4",
+    variants[variant],
+    sizes[size],
+    className,
+  ]}
+  {...rest}
+>
+  {icon && <Icon name={icon} size={size === "lg" ? 20 : 18} />}
+  <slot />
+  {
+    iconEnd && (
+      <Icon
+        name={iconEnd}
+        size={size === "lg" ? 20 : 18}
+        class="transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-0.5"
+      />
+    )
+  }
+</Tag>

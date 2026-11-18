@@ -1,0 +1,76 @@
+---
+import HeroCarousel from "./HeroCarousel.astro";
+import LogoMarquee from "./LogoMarquee.astro";
+import { hero } from "../../content/home";
+
+const { eyebrow, headline, subtext, form, explore, slides, logos } = hero;
+---
+
+<section
+  id="hero"
+  class="relative overflow-hidden bg-[linear-gradient(180deg,#E6E6ED_0%,#FFFFFF_75%,#FFFFFF_100%)] pb-12 pt-[104px] font-sans lg:pb-16 lg:pt-[184px]"
+>
+  <div class="mx-auto grid max-w-[1600px] gap-10 px-6 lg:grid-cols-[480px_minmax(0,1fr)] lg:gap-x-8 lg:px-[106px]">
+    <!-- ───────── Left column ───────── -->
+    <div class="flex flex-col items-start">
+      <!-- eyebrow -->
+      <div class="flex items-center gap-2 text-[15px] leading-[1.4]">
+        <span class="font-medium text-carbon">{eyebrow.brand}</span>
+        <span class="text-carbon/60">{eyebrow.tagline}</span>
+      </div>
+
+      <h1
+        class="mt-5 font-display text-5xl font-medium leading-none tracking-[-0.02em] text-carbon lg:mt-6 lg:text-[72px]"
+      >
+        {headline[0]}<br />{headline[1]}
+      </h1>
+
+      <p class="mt-4 max-w-[440px] text-lg leading-[1.3] text-carbon/65 lg:mt-5 lg:text-xl">{subtext}</p>
+
+      <!-- email capture: leads to the contact form (the email is prefilled there) -->
+      <form
+        action="#contacto"
+        method="get"
+        class="mt-7 flex w-full max-w-[476px] flex-col gap-1.5 rounded-xl bg-white p-1.5 shadow-[0_0_0_1px_#DCDCDE,0_0_0_5px_rgba(220,220,222,0.45)] sm:h-[66px] sm:flex-row sm:items-center lg:mt-8"
+      >
+        <label for="hero-email" class="sr-only">{form.label}</label>
+        <input
+          id="hero-email"
+          name="email"
+          type="email"
+          required
+          autocomplete="email"
+          placeholder={form.placeholder}
+          class="h-12 min-w-0 flex-1 bg-transparent px-3.5 text-[17px] text-carbon outline-none placeholder:text-carbon/50 sm:h-[54px] sm:pl-5 sm:pr-2 sm:text-lg"
+        />
+        <button
+          type="submit"
+          class="h-[54px] rounded-lg bg-azul px-5 text-lg font-medium text-white transition-colors hover:bg-azul-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azul sm:w-48 sm:shrink-0 sm:px-0"
+        >
+          {form.cta}
+        </button>
+      </form>
+
+      <a
+        href={explore.href}
+        class="mt-6 inline-flex items-center gap-2 text-lg font-semibold text-carbon transition-opacity hover:opacity-70"
+      >
+        {explore.label}
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#005CFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+          ><path d="M3 8h10M9 4l4 4-4 4"></path></svg
+        >
+      </a>
+    </div>
+
+    <!-- ───────── Right column: image carousel ───────── -->
+    <HeroCarousel
+      slides={slides}
+      label={hero.carouselLabel}
+      dotLabel={hero.dotLabel}
+      class="max-lg:-mx-6 lg:-mt-[89px] lg:w-full lg:max-w-[710px] lg:justify-self-end"
+    />
+  </div>
+
+  <!-- ───────── Trusted-by marquee (48px under the content) ───────── -->
+  <LogoMarquee logos={logos} label={hero.marqueeLabel} class="mt-12" />
+</section>

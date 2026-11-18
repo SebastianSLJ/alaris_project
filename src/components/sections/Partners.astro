@@ -1,0 +1,740 @@
+---
+/*
+ * "Marcas aliadas y certificaciones": radial selection wheel.
+ * Geometry is computed here at render time (works without JS); the script only writes
+ * `data-active` on the wheel and the hub text. All the look lives in CSS.
+ *
+ * ── Tuning ──────────────────────────────────────────────────────────────
+ * OUTER_R / INNER_R  Ring radii in viewBox units (viewBox is 600×600, center 300,300).
+ * GAP_DEG            Separation between sectors (measured at mid-ring; edges are kept parallel).
+ * POP_PX             How far the active sector moves outwards, in viewBox units.
+ * DEAD_ZONE_RATIO    Inside this fraction of OUTER_R (the hub) the selection is kept.
+ * OUTSIDE_RATIO      Beyond this fraction of OUTER_R the wheel goes back to idle.
+ * HUB_R              Radius of the glass hub (keep it < INNER_R).
+ */
+const OUTER_R = 270;
+const INNER_R = 125;
+const GAP_DEG = 3;
+const POP_PX = 9;
+const DEAD_ZONE_RATIO = 0.45;
+const OUTSIDE_RATIO = 1.08;
+const HUB_R = 116;
+
+import Icon from "../ui/Icon.astro";
+import { partners } from "../../content/home";
+
+const VB = 600;
+const C = VB / 2;
+const MID_R = (OUTER_R + INNER_R) / 2;
+const items = partners.items.slice(0, 8); // supports 3–8 sectors
+const n = items.length;
+const span = 360 / n;
+
+/* ── Pure geometry ── 0° = 12 o'clock, clockwise */
+const rad = (deg: number) => (deg * Math.PI) / 180;
+const r2 = (v: number) => Math.round(v * 100) / 100;
+const polarToCartesian = (r: number, deg: number) => ({ x: r2(C + r * Math.sin(rad(deg))), y: r2(C - r * Math.cos(rad(deg))) });
+const pt = (p: { x: number; y: number }) => `${p.x} ${p.y}`;
+
+/** Donut slice centered on `mid`, with a constant-width gap (parallel edges) to its neighbours. */
+function ringSlicePath(mid: number) {
+  const gap = MID_R * rad(GAP_DEG);
+  const halfGapDeg = (r: number) => (Math.asin(Math.min(1, gap / 2 / r)) * 180) / Math.PI;
+  const edge = (r: number) => {
+    const h = halfGapDeg(r);
+    const start = mid - span / 2 + h;
+    const end = mid + span / 2 - h;
+    return { s: polarToCartesian(r, start), e: polarToCartesian(r, end), large: end - start > 180 ? 1 : 0 };
+  };
+  const o = edge(OUTER_R);
+  const i = edge(INNER_R);
+  return `M${pt(o.s)} A${OUTER_R} ${OUTER_R} 0 ${o.large} 1 ${pt(o.e)} L${pt(i.e)} A${INNER_R} ${INNER_R} 0 ${i.large} 0 ${pt(i.s)} Z`;
+}
+
+const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+const logoSrc = (logo: unknown) => (typeof logo === "string" ? logo : (logo as { src: string } | undefined)?.src);
+
+const sectors = items.map((item, i) => {
+  const mid = i * span;
+  const ux = r2(Math.sin(rad(mid)));
+  const uy = r2(-Math.cos(rad(mid)));
+  return {
+    ...item,
+    i,
+    d: ringSlicePath(mid),
+    label: polarToCartesian(MID_R, mid),
+    ux,
+    uy,
+    style: `--i:${i};--tx:${r2(ux * POP_PX)}px;--ty:${r2(uy * POP_PX)}px`,
+    aria: `${item.name}, ${lowerFirst(item.status)}`,
+    logo: logoSrc(item.logo),
+  };
+});
+
+/* decorative outer ring: minor tick every 5°, major tick at each sector's center */
+const ticks = Array.from({ length: 72 }, (_, k) => {
+  const deg = k * 5;
+  const major = sectors.some((s) => Math.abs(s.i * span - deg) < 0.01);
+  return { a: polarToCartesian(major ? 281 : 285, deg), b: polarToCartesian(major ? 295 : 291, deg), major };
+});
+
+/* Per-index hooks (the only thing that depends on the item count): the active sector gets --on:1
+   and the wheel gets the direction the background light should drift to. */
+const activeCss = sectors
+  .map((s) => `.pw-wheel[data-active="${s.i}"] .pw-sector[data-i="${s.i}"]{--on:1}.pw-wheel[data-active="${s.i}"]{--bx:${s.ux};--by:${s.uy}}`)
+  .join("");
+
+const hubSize = `${r2(((HUB_R * 2) / VB) * 100)}%`;
+---
+
+<section id={partners.id} aria-labelledby="partners-title" class="pw relative py-24 text-[#F2F4FA] lg:py-32">
+  <Fragment set:html={`<style>${activeCss}</style>`} />
+
+  <div class="container-x relative z-[1] grid items-center gap-14 min-[1100px]:grid-cols-[minmax(0,1fr)_minmax(0,560px)] min-[1100px]:gap-20">
+    <div>
+      <h2
+        id="partners-title"
+        data-reveal
+        class="font-display text-[clamp(2.5rem,4.5vw,4rem)] font-medium leading-[1.05] tracking-[-0.02em] text-[#F2F4FA]"
+      >
+        {partners.title}
+      </h2>
+      <p data-reveal style="--d:100ms" class="mt-6 max-w-[520px] text-lg leading-[1.6] text-[#9AA3B8] lg:text-xl">
+        {partners.description}
+      </p>
+    </div>
+
+    <div class="pw-stage justify-self-center">
+      <div
+        class="pw-wheel"
+        data-wheel
+        data-outer={OUTER_R}
+        data-dead={DEAD_ZONE_RATIO}
+        data-outside={OUTSIDE_RATIO}
+        data-idle-name={partners.idle.name}
+        style={`--hub:${hubSize}`}
+      >
+        <span aria-hidden="true" class="pw-glow"></span>
+        <span aria-hidden="true" class="pw-blob"></span>
+        <span aria-hidden="true" class="pw-halo"></span>
+
+        <svg class="pw-svg" viewBox={`0 0 ${VB} ${VB}`} role="group" aria-labelledby="partners-title">
+          <defs>
+            <radialGradient id="pw-on-fill" gradientUnits="userSpaceOnUse" cx={C} cy={C} r={OUTER_R}>
+              <stop offset={r2(INNER_R / OUTER_R)} stop-color="rgb(0 92 255)" stop-opacity="0.12" />
+              <stop offset="1" stop-color="rgb(0 92 255)" stop-opacity="0.38" />
+            </radialGradient>
+          </defs>
+
+          <g aria-hidden="true" class="pw-ticks">
+            <circle cx={C} cy={C} r="288" />
+            {ticks.map((t) => <line x1={t.a.x} y1={t.a.y} x2={t.b.x} y2={t.b.y} class:list={[t.major && "is-major"]} />)}
+          </g>
+
+          {
+            sectors.map((s) => (
+              <g
+                class="pw-sector"
+                data-i={s.i}
+                data-kind={s.kind}
+                data-name={s.name}
+                data-status={s.status}
+                tabindex="0"
+                role="button"
+                aria-label={s.aria}
+                style={s.style}
+              >
+                <g class="pw-body">
+                  <path class="pw-shape" d={s.d} />
+                  <path class="pw-shape-on" d={s.d} />
+                  <g transform={`translate(${s.label.x} ${s.label.y})`}>
+                    <g class="pw-mark">
+                      {s.logo ? (
+                        <image href={s.logo} x="-36" y="-20" width="72" height="40" preserveAspectRatio="xMidYMid meet" />
+                      ) : (
+                        <g transform="translate(-14 -14)">
+                          <Icon name={s.kind === "certification" ? "file-check" : "shield-check"} size={28} strokeWidth={1.6} />
+                        </g>
+                      )}
+                    </g>
+                    <text class="pw-label" y="25" text-anchor="middle">
+                      {s.name}
+                    </text>
+                  </g>
+                </g>
+              </g>
+            ))
+          }
+        </svg>
+
+        <!-- glass hub (visual only; announcements go through the live region below) -->
+        <div class="pw-hub" aria-hidden="true" data-swap>
+          {
+            [0, 1].map((k) => (
+              <div class:list={["pw-layer", k === 0 && "is-shown"]} data-kind="idle">
+                <span class="pw-hub-icon">
+                  <span class="pw-ico-brand">
+                    <Icon name="shield-check" size={28} strokeWidth={1.6} />
+                  </span>
+                  <span class="pw-ico-cert">
+                    <Icon name="file-check" size={28} strokeWidth={1.6} />
+                  </span>
+                </span>
+                <span class="pw-hub-name" data-name>
+                  {k === 0 ? partners.idle.name : ""}
+                </span>
+                <span class="pw-hub-status">
+                  <span data-status />
+                  <span class="pw-hint pw-hint-hover">{partners.idle.hintHover}</span>
+                  <span class="pw-hint pw-hint-touch">{partners.idle.hintTouch}</span>
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- small screens: the status sits under the wheel (the hub is too small for it) -->
+      <div class="pw-caption" aria-hidden="true" data-swap>
+        {
+          [0, 1].map((k) => (
+            <div class:list={["pw-layer", k === 0 && "is-shown"]} data-kind="idle">
+              <span data-status />
+              <span class="pw-hint pw-hint-hover">{partners.idle.hintHover}</span>
+              <span class="pw-hint pw-hint-touch">{partners.idle.hintTouch}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="sr-only" aria-live="polite" data-wheel-live></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ═════════ Section: dark base, vignette, grain ═════════ */
+  .pw {
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ink-2: #9aa3b8;
+    overflow: clip;
+    background:
+      radial-gradient(130% 95% at 70% 45%, transparent 50%, rgb(0 0 0 / 0.55) 100%),
+      linear-gradient(180deg, #05070d 0%, #0a0f1e 100%);
+    /* hairline so it doesn't merge with the (also dark) contact section below */
+    border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  }
+  .pw::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ═════════ Wheel ═════════ */
+  /* explicit width: the wheel is a size container, so it can't take its width from its content */
+  .pw-stage {
+    width: 100%;
+    max-width: 560px;
+  }
+  .pw-wheel {
+    margin-inline: auto;
+    --on: 0;
+    --dim: 0;
+    --bx: 0;
+    --by: 0;
+    position: relative;
+    width: min(92vw, 560px, 100%);
+    aspect-ratio: 1;
+    container-type: inline-size;
+  }
+  @media (max-width: 639.98px) {
+    .pw-wheel {
+      width: min(92vw, 420px, 100%);
+    }
+  }
+  .pw-wheel[data-active] {
+    --dim: 1;
+  }
+  .pw-svg {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* light behind the wheel + a blob that drifts towards the active sector */
+  .pw-glow,
+  .pw-blob,
+  .pw-halo {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 9999px;
+  }
+  .pw-glow {
+    inset: -28%;
+    background: radial-gradient(closest-side, rgb(0 92 255 / 0.28), rgb(0 92 255 / 0.1) 55%, transparent 100%);
+  }
+  .pw-blob {
+    left: 50%;
+    top: 50%;
+    width: 62%;
+    height: 62%;
+    background: radial-gradient(closest-side, rgb(0 92 255 / 0.42), rgb(0 92 255 / 0.12) 60%, transparent 100%);
+    opacity: 0.55;
+    transform: translate(-50%, -50%) translate(calc(var(--bx) * 24cqi), calc(var(--by) * 24cqi));
+    transition:
+      transform 500ms var(--ease),
+      opacity 500ms var(--ease);
+  }
+  .pw-wheel[data-active] .pw-blob {
+    opacity: 1;
+  }
+  .pw-halo {
+    left: 50%;
+    top: 50%;
+    width: calc(var(--hub) * 1.55);
+    height: calc(var(--hub) * 1.55);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgb(61 123 255 / 0.32), rgb(0 92 255 / 0.08) 65%, transparent 100%);
+    animation: pw-breathe 6s ease-in-out infinite alternate;
+  }
+  @keyframes pw-breathe {
+    from {
+      opacity: 0.8;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .pw-ticks circle {
+    fill: none;
+    stroke: rgb(255 255 255 / 0.08);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .pw-ticks line {
+    stroke: rgb(255 255 255 / 0.14);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .pw-ticks line.is-major {
+    stroke: rgb(255 255 255 / 0.32);
+    stroke-width: 1.5;
+  }
+
+  /* ═════════ Sectors (everything derives from --on and the wheel's --dim) ═════════ */
+  .pw-sector {
+    --on: 0;
+    outline: none;
+    cursor: default;
+    transform-box: view-box;
+    transform-origin: 300px 300px;
+  }
+  .pw-sector:focus-visible {
+    --on: 1;
+  }
+  .pw-wheel:has(.pw-sector:focus-visible) {
+    --dim: 1;
+  }
+  /* no JS: plain CSS hover */
+  .pw-wheel:not(.js-wheel) .pw-sector:hover {
+    --on: 1;
+  }
+  .pw-wheel:not(.js-wheel):has(.pw-sector:hover) {
+    --dim: 1;
+  }
+
+  .pw-body {
+    color: rgb(255 255 255 / calc(0.72 + 0.28 * var(--on)));
+    opacity: calc(1 - 0.5 * var(--dim) * (1 - var(--on)));
+    transform: translate(calc(var(--tx) * var(--on)), calc(var(--ty) * var(--on)));
+    transition:
+      opacity 220ms var(--ease),
+      transform 220ms var(--ease),
+      color 220ms var(--ease);
+  }
+  .pw-shape,
+  .pw-shape-on {
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .pw-shape {
+    fill: rgb(255 255 255 / 0.04);
+    stroke: rgb(255 255 255 / 0.22);
+    stroke-dasharray: 4 4;
+  }
+  .pw-sector[data-kind="certification"] .pw-shape {
+    fill: rgb(255 255 255 / 0.09);
+    stroke: rgb(255 255 255 / 0.3);
+    stroke-dasharray: none;
+  }
+  .pw-shape-on {
+    fill: url(#pw-on-fill);
+    stroke: #3d7bff;
+    filter: drop-shadow(0 0 18px rgb(0 92 255 / 0.55));
+    opacity: var(--on);
+    transition: opacity 220ms var(--ease);
+  }
+  .pw-sector:focus-visible .pw-shape-on {
+    stroke: #fff; /* keyboard focus is unmistakable */
+  }
+  .pw-mark {
+    --mark: 1;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: translateY(-9px) scale(calc(var(--mark) * (1 + 0.12 * var(--on))));
+    transition: transform 220ms var(--ease);
+  }
+  .pw-label {
+    fill: #fff;
+    fill-opacity: calc(0.78 + 0.22 * var(--on));
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: fill-opacity 220ms var(--ease);
+  }
+  @media (max-width: 639.98px) {
+    .pw-label {
+      display: none;
+    }
+    .pw-mark {
+      --mark: 1.4;
+      transform: scale(calc(var(--mark) * (1 + 0.12 * var(--on))));
+    }
+  }
+
+  /* ═════════ Glass hub + crossfading layers ═════════ */
+  .pw-hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--hub);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: rgb(255 255 255 / 0.04);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.07),
+      0 24px 60px -24px rgb(0 0 0 / 0.7);
+    pointer-events: none;
+  }
+  .pw-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45em;
+    padding: 0 13%;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 180ms var(--ease),
+      transform 180ms var(--ease);
+  }
+  .pw-layer.is-shown {
+    opacity: 1;
+    transform: none;
+  }
+  .pw-layer.is-leaving {
+    transform: translateY(-6px);
+  }
+  .pw-layer.no-anim {
+    transition: none;
+  }
+
+  .pw-hub-icon {
+    display: flex;
+    width: clamp(22px, 5.2cqi, 30px);
+    margin-bottom: 0.15em;
+    color: #7fa4ff;
+  }
+  .pw-hub-icon :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  [data-kind="certification"] .pw-ico-brand,
+  .pw-layer:not([data-kind="certification"]) .pw-ico-cert {
+    display: none;
+  }
+  .pw-hub-name {
+    font-size: clamp(15px, 3.9cqi, 22px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .pw-hub-status,
+  .pw-caption .pw-layer {
+    font-size: clamp(12px, 2.6cqi, 15px);
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+  [data-kind="idle"] [data-status],
+  .pw-layer:not([data-kind="idle"]) .pw-hint,
+  .pw-hint-touch {
+    display: none;
+  }
+  @media (hover: none) {
+    .pw-hint-hover {
+      display: none;
+    }
+    [data-kind="idle"] .pw-hint-touch {
+      display: inline;
+    }
+  }
+
+  .pw-caption {
+    display: none;
+    position: relative;
+    height: 3.2em;
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 639.98px) {
+    .pw-hub-status {
+      display: none;
+    }
+    .pw-caption {
+      display: block;
+    }
+    .pw-caption .pw-layer {
+      font-size: 15px;
+      padding: 0;
+    }
+  }
+
+  /* ═════════ Entrance (JS + motion only): fan out from the center, hub last ═════════ */
+  @media (prefers-reduced-motion: no-preference) {
+    .js-wheel .pw-sector {
+      transition:
+        opacity 450ms var(--ease) calc(var(--i) * 60ms),
+        transform 600ms var(--ease) calc(var(--i) * 60ms);
+    }
+    .js-wheel .pw-hub {
+      transition:
+        opacity 450ms var(--ease) var(--hub-delay, 0ms),
+        transform 600ms var(--ease) var(--hub-delay, 0ms);
+    }
+    .js-wheel:not(.is-in) .pw-sector {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    .js-wheel:not(.is-in) .pw-hub {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+    .js-wheel.is-settled .pw-sector,
+    .js-wheel.is-settled .pw-hub {
+      transition: none;
+    }
+  }
+
+  /* ═════════ Reduced motion: colour and opacity only ═════════ */
+  @media (prefers-reduced-motion: reduce) {
+    .pw-body {
+      transform: none;
+    }
+    .pw-mark {
+      transform: translateY(-9px);
+    }
+    .pw-blob {
+      transform: translate(-50%, -50%);
+    }
+    .pw-halo {
+      animation: none;
+    }
+    .pw-layer,
+    .pw-layer.is-leaving {
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) and (max-width: 639.98px) {
+    .pw-mark {
+      transform: scale(var(--mark));
+    }
+  }
+</style>
+
+<script>
+  /* Radial wheel: selection by angle. Writes only `data-active` and the hub text. */
+  const VB = 600;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  type State = { kind: string; name: string; status: string };
+
+  function initWheel(wheel: HTMLElement) {
+    const section = wheel.closest("section");
+    const sectors = Array.from(wheel.querySelectorAll<SVGGElement>(".pw-sector"));
+    const n = sectors.length;
+    if (!section || n < 3) return;
+
+    const OUTER = Number(wheel.dataset.outer) || 270;
+    const DEAD = Number(wheel.dataset.dead) || 0.45;
+    const OUTSIDE = Number(wheel.dataset.outside) || 1.08;
+    const span = 360 / n;
+    const live = section.querySelector<HTMLElement>("[data-wheel-live]");
+    const idle: State = { kind: "idle", name: wheel.dataset.idleName ?? "", status: "" };
+    const states: State[] = sectors.map((s) => ({ kind: s.dataset.kind ?? "brand", name: s.dataset.name ?? "", status: s.dataset.status ?? "" }));
+
+    /* ── crossfade between two stacked layers ── */
+    const swaps = Array.from(section.querySelectorAll<HTMLElement>("[data-swap]")).map((el) => ({
+      layers: Array.from(el.querySelectorAll<HTMLElement>(":scope > .pw-layer")),
+      cur: 0,
+    }));
+    const paint = (st: State) => {
+      for (const sw of swaps) {
+        const [now, next] = [sw.layers[sw.cur], sw.layers[1 - sw.cur]];
+        next.classList.add("no-anim");
+        next.classList.remove("is-leaving", "is-shown");
+        void next.offsetWidth; // park it below, without animating
+        next.classList.remove("no-anim");
+        next.dataset.kind = st.kind;
+        const name = next.querySelector("[data-name]");
+        const status = next.querySelector("[data-status]");
+        if (name) name.textContent = st.name;
+        if (status) status.textContent = st.status;
+        next.classList.add("is-shown");
+        now.classList.remove("is-shown");
+        now.classList.add("is-leaving");
+        sw.cur = 1 - sw.cur;
+      }
+    };
+
+    let active = -1;
+    const setActive = (i: number) => {
+      if (i === active) return;
+      active = i;
+      if (i < 0) wheel.removeAttribute("data-active");
+      else wheel.dataset.active = String(i);
+      const st = i < 0 ? idle : states[i];
+      paint(st);
+      if (live) live.textContent = i < 0 ? "" : `${st.name}. ${st.status}`;
+    };
+
+    /* ── hit test by angle: the whole wedge (gaps included) belongs to its sector ── */
+    const hit = (x: number, y: number): number | "dead" | "out" => {
+      const r = wheel.getBoundingClientRect();
+      const scale = r.width / VB;
+      const dx = (x - (r.left + r.width / 2)) / scale;
+      const dy = (y - (r.top + r.height / 2)) / scale;
+      const dist = Math.hypot(dx, dy) / OUTER;
+      if (dist < DEAD) return "dead";
+      if (dist > OUTSIDE) return "out";
+      let deg = (Math.atan2(dx, -dy) * 180) / Math.PI; // 0° at 12 o'clock, clockwise
+      if (deg < 0) deg += 360;
+      return Math.floor(((deg + span / 2) % 360) / span);
+    };
+    const apply = (h: number | "dead" | "out") => {
+      if (h === "out") setActive(-1);
+      else if (h !== "dead") setActive(h);
+    };
+    const focusedIndex = () => sectors.indexOf(document.activeElement as SVGGElement);
+
+    /* mouse / pen: follow the pointer, rAF-throttled */
+    let raf = 0;
+    let px = 0;
+    let py = 0;
+    let hovering = false;
+    wheel.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch") return;
+      hovering = true;
+      reveal();
+      px = e.clientX;
+      py = e.clientY;
+      if (!raf)
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          if (hovering) apply(hit(px, py));
+        });
+    });
+    wheel.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "touch") return;
+      hovering = false;
+      setActive(focusedIndex());
+    });
+
+    /* touch: tap selects and stays until another tap (inside or outside the wheel) */
+    let lastInsideDown = -Infinity;
+    wheel.addEventListener("pointerdown", (e) => {
+      lastInsideDown = performance.now();
+      if (e.pointerType !== "touch") return;
+      reveal();
+      apply(hit(e.clientX, e.clientY));
+    });
+    document.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "touch" && !wheel.contains(e.target as Node)) setActive(-1);
+    });
+
+    /* keyboard: Tab between sectors, arrows rotate, Escape resets */
+    wheel.addEventListener("focusin", (e) => {
+      const i = sectors.indexOf(e.target as SVGGElement);
+      if (i >= 0) {
+        reveal();
+        setActive(i);
+      }
+    });
+    wheel.addEventListener("focusout", (e) => {
+      /* a tap/click inside the wheel (e.g. on the hub) blurs the sector but must keep the selection */
+      if (performance.now() - lastInsideDown < 500) return;
+      if (!wheel.contains(e.relatedTarget as Node) && !hovering) setActive(-1);
+    });
+    wheel.addEventListener("keydown", (e) => {
+      const i = sectors.indexOf(e.target as SVGGElement);
+      if (i < 0) return;
+      const moves: Record<string, number> = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: n - 1 };
+      const go = moves[e.key] as number | undefined;
+      if (go !== undefined) {
+        e.preventDefault();
+        sectors[(go + n) % n].focus();
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setActive(i);
+      } else if (e.key === "Escape") {
+        sectors[i].blur();
+        setActive(-1);
+      }
+    });
+
+    /* ── entrance: sectors fan out (60ms stagger), hub last; never blocks interaction ── */
+    wheel.style.setProperty("--hub-delay", `${n * 60 + 120}ms`);
+    let revealed = false;
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      wheel.classList.add("is-in");
+      window.setTimeout(() => wheel.classList.add("is-settled"), n * 60 + 900);
+    }
+    const r = wheel.getBoundingClientRect();
+    const inView = r.top < window.innerHeight && r.bottom > 0;
+    if (reduceMotion.matches || inView || !("IntersectionObserver" in window)) {
+      wheel.classList.add("is-in", "is-settled"); // no entrance: already on screen, or reduced motion
+      revealed = true;
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((en) => en.isIntersecting)) {
+            reveal();
+            io.disconnect();
+          }
+        },
+        { threshold: 0.25 },
+      );
+      io.observe(wheel);
+    }
+    wheel.classList.add("js-wheel");
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-wheel]").forEach(initWheel);
+</script>

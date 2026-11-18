@@ -1,0 +1,456 @@
+---
+/*
+ * "Del requerimiento a la solución": compact vertical timeline. Every step is readable at a glance;
+ * the blue line fills as the section scrolls past (no pinning, no extra scroll distance).
+ * Without JS or with prefers-reduced-motion everything renders in its final, complete state.
+ *
+ * ── Tuning (scroll feel) ────────────────────────────────────────────────
+ * TRIGGER_RATIO Viewport height fraction used as the reference line: a step lights up when its
+ *               circle's center crosses it. Higher = earlier (steps light up as soon as they enter).
+ * SMOOTHING     Fraction of the remaining distance the line catches up per 60 fps frame.
+ *               Lower = softer trailing; 1 = glued to the scroll.
+ * STEP_GAP      Space between steps. Short on purpose: the animation accompanies the reading,
+ *               it never adds scroll distance.
+ */
+const TRIGGER_RATIO = 0.62;
+const SMOOTHING = 0.12;
+const STEP_GAP = { mobile: "44px", desktop: "56px" };
+
+import Button from "../ui/Button.astro";
+import { process } from "../../content/home";
+
+const last = process.steps.length - 1;
+---
+
+<section
+  id={process.id}
+  aria-labelledby="process-title"
+  data-timeline
+  data-trigger={TRIGGER_RATIO}
+  data-smoothing={SMOOTHING}
+  style={`--gap-mobile:${STEP_GAP.mobile};--gap-desktop:${STEP_GAP.desktop}`}
+  class="tl bg-metal py-20 lg:py-32"
+>
+  <div class="container-x grid gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 xl:gap-24">
+    <div class="lg:sticky lg:top-32 lg:self-start">
+      <h2
+        id="process-title"
+        data-reveal
+        class="font-display text-[clamp(2.375rem,1.7rem+2.2vw,3.5rem)] font-medium leading-[1.05] tracking-[-0.02em] text-carbon"
+      >
+        {process.title}
+      </h2>
+      {
+        process.description && (
+          <p data-reveal style="--d:100ms" class="mt-5 max-w-[420px] text-lg leading-[1.55] text-carbon/75">
+            {process.description}
+          </p>
+        )
+      }
+      {
+        process.cta && (
+          <div data-reveal style="--d:200ms" class="mt-9 hidden lg:block">
+            <Button href={process.cta.href} interest={process.cta.interest} size="lg">
+              {process.cta.label}
+            </Button>
+          </div>
+        )
+      }
+    </div>
+
+    <div>
+      <ol data-timeline-list>
+        {
+          process.steps.map((step, i) => (
+            <li data-timeline-step class="tl-step relative grid grid-cols-[var(--dot)_minmax(0,1fr)] gap-x-5 sm:gap-x-7">
+              {i < last && (
+                <span aria-hidden="true" class="tl-seg">
+                  <span data-timeline-fill class="tl-fill" />
+                  <span class="tl-tip">
+                    <span class="tl-tip-dot" />
+                  </span>
+                </span>
+              )}
+
+              <span aria-hidden="true" data-timeline-dot class="tl-dot">
+                {step.marker === "check" ? (
+                  <svg class="tl-check" viewBox="0 0 24 24" fill="none">
+                    <path class="tl-check-base" d="M20 6 9 17l-5-5" />
+                    <path class="tl-check-draw" d="M20 6 9 17l-5-5" pathLength="1" />
+                  </svg>
+                ) : (
+                  <span class="tl-num">{String(i + 1).padStart(2, "0")}</span>
+                )}
+              </span>
+
+              <div class="tl-body">
+                <h3 class="tl-title font-semibold text-carbon">
+                  <span class="sr-only">
+                    {process.stepLabel} {i + 1}:{" "}
+                  </span>
+                  {step.title}
+                </h3>
+                <p class="mt-2 max-w-[46ch] text-[1.0625rem] leading-[1.6] text-carbon/70 lg:text-lg">{step.description}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+
+      {
+        process.cta && (
+          <Button href={process.cta.href} interest={process.cta.interest} size="lg" class="mt-12 w-full sm:w-auto lg:hidden">
+            {process.cta.label}
+          </Button>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .tl {
+    --dot: 52px;
+    --stroke: 2px;
+    --gap: var(--gap-mobile);
+    --off: #c5c8d4; /* rail + upcoming ring */
+    --off-ink: #8e92a1; /* upcoming number */
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (min-width: 1024px) {
+    .tl {
+      --dot: 60px;
+      --gap: var(--gap-desktop);
+    }
+  }
+
+  .tl-step:not(:last-child) {
+    padding-bottom: var(--gap);
+  }
+
+  /* ───────── Line: one segment per step, center of this circle → center of the next ─────────
+     Segments meet behind the circles, so they read as one continuous line. */
+  .tl-seg {
+    position: absolute;
+    top: calc(var(--dot) / 2);
+    left: calc((var(--dot) - var(--stroke)) / 2);
+    width: var(--stroke);
+    height: 100%;
+    background: var(--off);
+  }
+  .tl-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--color-azul);
+    transform: scaleY(var(--progress, 1)); /* complete without JS */
+    transform-origin: top;
+  }
+  /* glowing tip that rides the end of the line while it fills */
+  .tl-tip {
+    position: absolute;
+    inset: 0;
+    transform: translateY(calc(var(--progress, 1) * 100%));
+    opacity: var(--tip, 0);
+    pointer-events: none;
+  }
+  .tl-tip-dot {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 9999px;
+    background: var(--color-azul);
+    box-shadow:
+      0 0 0 3px rgb(0 92 255 / 0.16),
+      0 0 12px 3px rgb(0 92 255 / 0.4);
+  }
+
+  /* ───────── Circle: reached = solid blue disc (scales in), current = soft halo ───────── */
+  .tl-dot {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--dot);
+    height: var(--dot);
+    border: var(--stroke) solid var(--color-azul);
+    border-radius: 9999px;
+    background: #fff;
+    color: #fff;
+  }
+  .tl-dot::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--stroke));
+    border-radius: inherit;
+    background: var(--color-azul);
+  }
+  .tl-dot::after {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--stroke));
+    border-radius: inherit;
+    box-shadow: 0 0 0 7px rgb(0 92 255 / 0.14);
+    opacity: 0;
+  }
+  .tl-num {
+    position: relative;
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  @media (min-width: 1024px) {
+    .tl-num {
+      font-size: 17px;
+    }
+  }
+  .tl-check {
+    position: relative;
+    width: 46%;
+    height: 46%;
+  }
+  .tl-check path {
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tl-check-base {
+    stroke: var(--off-ink);
+    opacity: 0; /* only visible while upcoming, like the grey numbers */
+  }
+  .tl-check-draw {
+    stroke: currentColor;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .tl-title {
+    /* center the step title on its circle */
+    margin-top: calc(var(--dot) / 2 - 0.6em);
+    font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  /* ───────── Scroll states: only once the script has taken over and motion is allowed ───────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .js-timeline .tl-fill,
+    .js-timeline .tl-tip {
+      will-change: transform;
+    }
+    .js-timeline .tl-dot {
+      transition:
+        border-color 400ms var(--ease),
+        color 400ms var(--ease);
+    }
+    .js-timeline .tl-dot::before {
+      transition: transform 500ms var(--ease);
+    }
+    .js-timeline .tl-dot::after {
+      transition: opacity 400ms var(--ease);
+    }
+    .js-timeline .tl-body {
+      transition:
+        opacity 600ms var(--ease),
+        transform 600ms var(--ease);
+    }
+    .js-timeline .tl-check-draw {
+      transition: stroke-dashoffset 600ms var(--ease) 150ms;
+    }
+    .js-timeline .tl-check-base {
+      transition: opacity 300ms var(--ease);
+    }
+
+    /* upcoming */
+    .js-timeline .tl-step:not(.is-active) .tl-dot {
+      border-color: var(--off);
+      color: var(--off-ink);
+    }
+    .js-timeline .tl-step:not(.is-active) .tl-dot::before {
+      transform: scale(0);
+    }
+    .js-timeline .tl-step:not(.is-active) .tl-body {
+      opacity: 0.45;
+      transform: translateY(8px);
+    }
+    .js-timeline .tl-step:not(.is-active) .tl-check-draw {
+      stroke-dashoffset: 1;
+    }
+    .js-timeline .tl-step:not(.is-active) .tl-check-base {
+      opacity: 1;
+    }
+    /* current */
+    .js-timeline .tl-step.is-current .tl-dot::after {
+      opacity: 1;
+    }
+
+    /* first paint after the script takes over: jump straight to the right state */
+    .tl-instant *,
+    .tl-instant *::before,
+    .tl-instant *::after {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  /* Scroll-linked timeline. Tunable constants live at the top of Process.astro (data-* attributes). */
+  const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+  /* Target floor slightly below 0, so the first step stays "upcoming" until the reference line reaches it. */
+  const BEFORE_START = -0.02;
+  const EPS = 0.001;
+  const FRAME = 1000 / 60;
+  const END_MARGIN = 48; // px of the list's end that must be visible for the line to be complete
+
+  function createTimeline(root: HTMLElement) {
+    const TRIGGER_RATIO = clamp(Number(root.dataset.trigger) || 0.62, 0.05, 0.95);
+    const SMOOTHING = clamp(Number(root.dataset.smoothing) || 0.12, 0.01, 1);
+
+    const list = root.querySelector<HTMLElement>("[data-timeline-list]");
+    const steps = Array.from(root.querySelectorAll<HTMLElement>("[data-timeline-step]"));
+    const dots = steps.map((s) => s.querySelector<HTMLElement>("[data-timeline-dot]"));
+    const fills = steps.map((s) => s.querySelector<HTMLElement>("[data-timeline-fill]")?.parentElement ?? null);
+    if (!list || steps.length < 2 || dots.some((d) => !d)) return null;
+
+    let stops: number[] = []; // each circle's position along the line, 0..1
+    let startY = 0; // scrollY at which the line starts filling
+    let endY = 1; // scrollY at which it is complete
+
+    let target = 0;
+    let current = 0;
+    let raf = 0;
+    let lastTime = 0;
+    const shownProgress = fills.map(() => NaN);
+    const shownTip = fills.map(() => NaN);
+    const shownState = steps.map(() => "");
+
+    /* Layout reads: only on start / resize, never per frame. */
+    const measure = () => {
+      const y = window.scrollY;
+      const centers = dots.map((d) => {
+        const r = d!.getBoundingClientRect();
+        return r.top + y + r.height / 2;
+      });
+      const first = centers[0];
+      const lastC = centers[centers.length - 1];
+      const length = Math.max(1, lastC - first);
+      stops = centers.map((c) => (c - first) / length);
+
+      const vh = window.innerHeight;
+      const listBottom = list.getBoundingClientRect().bottom + y;
+      startY = first - vh * TRIGGER_RATIO;
+      /* Complete when the last circle crosses the reference line, or at the latest when the end of
+         the list is on screen: whoever stops with the whole section in view sees it finished. */
+      endY = Math.max(startY + 1, Math.min(lastC - vh * TRIGGER_RATIO, listBottom - vh + END_MARGIN));
+    };
+
+    const readTarget = () => clamp((window.scrollY - startY) / (endY - startY), BEFORE_START, 1);
+
+    /* Writes only, skipped when unchanged. */
+    const render = () => {
+      let currentIdx = -1;
+      for (let i = 0; i < steps.length; i++) if (current >= stops[i] - EPS / 10) currentIdx = i;
+
+      for (let i = 0; i < steps.length; i++) {
+        const seg = fills[i];
+        if (seg && i < steps.length - 1) {
+          const local = clamp((current - stops[i]) / (stops[i + 1] - stops[i] || 1), 0, 1);
+          if (!(Math.abs(local - shownProgress[i]) < 0.0005)) {
+            seg.style.setProperty("--progress", local.toFixed(4));
+            shownProgress[i] = local;
+          }
+          const tip = clamp(Math.min(local, 1 - local) * 12, 0, 1);
+          if (tip !== shownTip[i]) {
+            seg.style.setProperty("--tip", tip.toFixed(3));
+            shownTip[i] = tip;
+          }
+        }
+        const state = i < currentIdx ? "done" : i === currentIdx ? "current" : "upcoming";
+        if (state !== shownState[i]) {
+          steps[i].classList.toggle("is-active", state !== "upcoming");
+          steps[i].classList.toggle("is-current", state === "current");
+          shownState[i] = state;
+        }
+      }
+    };
+
+    const tick = (now: number) => {
+      const dt = lastTime ? Math.min(now - lastTime, 100) : FRAME;
+      lastTime = now;
+      const k = 1 - Math.pow(1 - SMOOTHING, dt / FRAME); // same feel at 60 Hz and 120 Hz
+      current += (target - current) * k;
+      if (Math.abs(target - current) < EPS) {
+        current = target;
+        raf = 0;
+        lastTime = 0;
+      } else {
+        raf = requestAnimationFrame(tick);
+      }
+      render();
+    };
+
+    const update = () => {
+      target = readTarget();
+      if (!raf && target !== current) raf = requestAnimationFrame(tick);
+    };
+    const remeasure = () => {
+      measure();
+      update();
+    };
+    const ro = "ResizeObserver" in window ? new ResizeObserver(remeasure) : null;
+
+    const start = () => {
+      measure();
+      target = current = readTarget();
+      root.classList.add("tl-instant");
+      render();
+      root.classList.add("js-timeline");
+      void root.offsetHeight; // commit the initial state without transitions
+      root.classList.remove("tl-instant");
+
+      window.addEventListener("scroll", update, { passive: true });
+      window.addEventListener("resize", remeasure, { passive: true });
+      ro?.observe(list); // text reflow, fonts
+      ro?.observe(document.body); // content above the section moving it
+    };
+
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      lastTime = 0;
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", remeasure);
+      ro?.disconnect();
+      root.classList.remove("js-timeline");
+      steps.forEach((s) => s.classList.remove("is-active", "is-current"));
+      fills.forEach((f) => {
+        f?.style.removeProperty("--progress");
+        f?.style.removeProperty("--tip");
+      });
+      shownProgress.fill(NaN);
+      shownTip.fill(NaN);
+      shownState.fill("");
+    };
+
+    return { start, stop };
+  }
+
+  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const timelines = Array.from(document.querySelectorAll<HTMLElement>("[data-timeline]"))
+    .map(createTimeline)
+    .filter((t) => t !== null);
+
+  let running = false;
+  const sync = () => {
+    const shouldRun = !motion.matches;
+    if (shouldRun === running) return;
+    running = shouldRun;
+    timelines.forEach((t) => (shouldRun ? t.start() : t.stop()));
+  };
+  sync();
+  motion.addEventListener("change", sync);
+</script>

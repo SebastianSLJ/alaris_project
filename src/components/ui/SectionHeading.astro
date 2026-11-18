@@ -1,0 +1,43 @@
+---
+/* Section title with its description stacked right below, left-aligned. */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  tone?: "light" | "dark";
+  id?: string;
+  class?: string;
+}
+
+const { eyebrow, title, description, tone = "light", id, class: className = "" } = Astro.props;
+const dark = tone === "dark";
+---
+
+<div class:list={["flex max-w-[880px] flex-col gap-5", className]}>
+  <div data-reveal>
+    {
+      eyebrow && (
+        <p class:list={["mb-4 flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[0.14em]", dark ? "text-white/80" : "text-azul"]}>
+          <span aria-hidden="true" class="h-px w-8 bg-current opacity-60" />
+          {eyebrow}
+        </p>
+      )
+    }
+    <h2
+      id={id}
+      class:list={[
+        "font-display text-4xl font-medium leading-[1.05] tracking-[-0.02em] lg:text-[52px]",
+        dark ? "text-white" : "text-carbon",
+      ]}
+    >
+      {title}
+    </h2>
+  </div>
+  {
+    description && (
+      <p data-reveal style="--d:100ms" class:list={["max-w-[620px] text-lg leading-[1.55]", dark ? "text-white/70" : "text-carbon/75"]}>
+        {description}
+      </p>
+    )
+  }
+</div>

@@ -1,0 +1,301 @@
+---
+import Icon from "../ui/Icon.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+import { contact, site } from "../../content/home";
+
+const f = contact.form;
+const f_ = f.fields;
+const policyHref = site.privacyPolicyHref;
+---
+
+<section
+  id={contact.id}
+  aria-labelledby="contact-title"
+  class="on-dark relative overflow-hidden bg-negro py-20 text-white lg:py-28"
+>
+  <!-- ambient glow -->
+  <span
+    aria-hidden="true"
+    class="pointer-events-none absolute -left-40 top-0 h-[520px] w-[520px] rounded-full bg-azul/20 blur-[140px]"></span>
+
+  <div class="container-x relative grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:gap-20">
+    <!-- ───── Left: intro + contact items ───── -->
+    <div>
+      <SectionHeading id="contact-title" title={contact.title} description={contact.description} tone="dark" />
+
+      <ul class="mt-10 space-y-3" data-reveal style="--d:150ms">
+        {
+          contact.items.map((it) => (
+            <li>
+              <a
+                href={it.href}
+                target={it.href.startsWith("http") ? "_blank" : undefined}
+                rel={it.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-white/25 hover:bg-white/[0.07]"
+              >
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-azul text-white">
+                  <Icon name={it.icon} size={22} />
+                </span>
+                <span class="min-w-0">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.12em] text-white/60">{it.label}</span>
+                  <span class="mt-0.5 block break-words text-lg font-medium text-white">{it.value}</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p data-reveal style="--d:200ms" class="mt-6 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-[15px] leading-[1.55] text-white/75">
+        <Icon name="clipboard-list" size={20} class="mt-0.5 shrink-0 text-white/70" />
+        {contact.note}
+      </p>
+    </div>
+
+    <!-- ───── Right: form card ───── -->
+    <div data-reveal style="--d:100ms" class="rounded-3xl bg-white p-6 text-carbon shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)] sm:p-9">
+      <div data-lead-wrapper>
+        <h3 class="font-display text-3xl font-medium tracking-[-0.01em]">{f.title}</h3>
+        <p class="mt-1.5 text-sm text-carbon/65">{f.hint}</p>
+
+        <form data-lead-form data-errors={JSON.stringify(f.errors)} novalidate class="mt-7 space-y-5">
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label for="lead-name" class="mb-1.5 block text-sm font-medium">{f_.name.label} <span aria-hidden="true">*</span></label>
+              <input id="lead-name" name="name" type="text" autocomplete="name" required placeholder={f_.name.placeholder} class="field-control" aria-describedby="lead-name-error" />
+              <p id="lead-name-error" data-error-for="name" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            </div>
+            <div>
+              <label for="lead-company" class="mb-1.5 block text-sm font-medium">{f_.company.label} <span aria-hidden="true">*</span></label>
+              <input id="lead-company" name="company" type="text" autocomplete="organization" required placeholder={f_.company.placeholder} class="field-control" aria-describedby="lead-company-error" />
+              <p id="lead-company-error" data-error-for="company" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            </div>
+            <div>
+              <label for="lead-entityType" class="mb-1.5 block text-sm font-medium">{f_.entityType.label} <span aria-hidden="true">*</span></label>
+              <select id="lead-entityType" name="entityType" required class="field-control" aria-describedby="lead-entityType-error">
+                <option value="" disabled selected>{f_.entityType.placeholder}</option>
+                {f.entityTypes.map((t) => <option value={t}>{t}</option>)}
+              </select>
+              <p id="lead-entityType-error" data-error-for="entityType" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            </div>
+            <div>
+              <label for="lead-phone" class="mb-1.5 block text-sm font-medium">{f_.phone.label} <span aria-hidden="true">*</span></label>
+              <input id="lead-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder={f_.phone.placeholder} class="field-control" aria-describedby="lead-phone-error" />
+              <p id="lead-phone-error" data-error-for="phone" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            </div>
+          </div>
+
+          <div>
+            <label for="lead-email" class="mb-1.5 block text-sm font-medium">{f_.email.label} <span aria-hidden="true">*</span></label>
+            <input id="lead-email" name="email" type="email" autocomplete="email" required placeholder={f_.email.placeholder} class="field-control" aria-describedby="lead-email-error" />
+            <p id="lead-email-error" data-error-for="email" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+          </div>
+
+          <div>
+            <label for="lead-interest" class="mb-1.5 block text-sm font-medium">{f_.interest.label} <span aria-hidden="true">*</span></label>
+            <select id="lead-interest" name="interest" required class="field-control" aria-describedby="lead-interest-error">
+              <option value="" disabled selected>{f_.interest.placeholder}</option>
+              {f.interests.map((o) => <option value={o.value}>{o.label}</option>)}
+            </select>
+            <p id="lead-interest-error" data-error-for="interest" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+          </div>
+
+          <div>
+            <label for="lead-message" class="mb-1.5 block text-sm font-medium">{f_.message.label}</label>
+            <textarea id="lead-message" name="message" rows="4" placeholder={f_.message.placeholder} class="field-control"></textarea>
+          </div>
+
+          <!-- honeypot: humans never see or fill this -->
+          <div class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+            <label>No llenar <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+          </div>
+
+          <div>
+            <label class="flex cursor-pointer items-start gap-3 text-sm leading-[1.5] text-carbon/80">
+              <input
+                type="checkbox"
+                name="consent"
+                required
+                aria-describedby="lead-consent-error"
+                class="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[#005CFF]"
+              />
+              <span>
+                {f.consent.before}
+                {
+                  policyHref ? (
+                    <a href={policyHref} target="_blank" rel="noopener noreferrer" class="font-medium text-azul underline underline-offset-2">
+                      {f.consent.link}
+                    </a>
+                  ) : (
+                    <span class="font-medium text-azul underline underline-offset-2">{f.consent.link}</span>
+                  )
+                }{f.consent.after} <span aria-hidden="true">*</span>
+              </span>
+            </label>
+            <p id="lead-consent-error" data-error-for="consent" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+          </div>
+
+          <p data-form-error class="hidden rounded-xl border border-[#D92D20]/30 bg-[#D92D20]/5 px-4 py-3 text-sm text-[#B42318]" role="alert">
+            {f.errors.submit}
+          </p>
+
+          <button
+            type="submit"
+            data-submit
+            data-label-idle={f.submit}
+            data-label-sending={f.sending}
+            class="group inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-azul text-base font-medium text-white shadow-[0_8px_20px_rgba(0,92,255,0.28)] transition-all duration-200 hover:bg-azul-dark hover:shadow-[0_12px_28px_rgba(0,92,255,0.38)] disabled:cursor-wait disabled:opacity-80"
+          >
+            <span data-submit-icon class="inline-flex"><Icon name="send" size={19} /></span>
+            <span data-submit-spinner class="hidden animate-spin"><Icon name="loader" size={19} strokeWidth={2.2} /></span>
+            <span data-submit-label>{f.submit}</span>
+          </button>
+          <p class="text-center text-sm text-carbon/60">{f.helper}</p>
+        </form>
+      </div>
+
+      <!-- success -->
+      <div data-lead-success hidden class="py-10 text-center" role="status" tabindex="-1">
+        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-azul/10 text-azul">
+          <Icon name="check" size={30} strokeWidth={2.4} />
+        </span>
+        <h3 class="mt-6 font-display text-3xl font-medium tracking-[-0.01em]">{f.success.title}</h3>
+        <p class="mx-auto mt-3 max-w-[380px] text-base leading-[1.6] text-carbon/70">{f.success.text}</p>
+        <button type="button" data-lead-reset class="mt-7 text-[15px] font-semibold text-azul underline underline-offset-4 hover:text-azul-dark">
+          {f.success.again}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { submitLead } from "../../lib/submitLead";
+
+  type Errors = { required: string; email: string; phone: string; consent: string; submit: string };
+  const form = document.querySelector<HTMLFormElement>("[data-lead-form]");
+  const wrapper = document.querySelector<HTMLElement>("[data-lead-wrapper]");
+  const success = document.querySelector<HTMLElement>("[data-lead-success]");
+
+  if (form && wrapper && success) {
+    const errors: Errors = JSON.parse(form.dataset.errors ?? "{}");
+    const submitBtn = form.querySelector<HTMLButtonElement>("[data-submit]")!;
+    const formError = form.querySelector<HTMLElement>("[data-form-error]")!;
+    const controls = Array.from(
+      form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input[name], select[name], textarea[name]"),
+    ).filter((c) => c.name !== "website");
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    const messageFor = (c: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): string => {
+      if (!c.required) return "";
+      if (c instanceof HTMLInputElement && c.type === "checkbox") return c.checked ? "" : errors.consent;
+      const v = c.value.trim();
+      if (!v) return errors.required;
+      if (c.name === "email" && !emailRe.test(v)) return errors.email;
+      if (c.name === "phone" && v.replace(/\D/g, "").length < 7) return errors.phone;
+      return "";
+    };
+
+    const show = (c: (typeof controls)[number], msg: string) => {
+      const out = form.querySelector<HTMLElement>(`[data-error-for="${c.name}"]`);
+      c.setAttribute("aria-invalid", msg ? "true" : "false");
+      if (out) {
+        out.textContent = msg;
+        out.classList.toggle("hidden", !msg);
+      }
+    };
+
+    const validate = (c: (typeof controls)[number]) => {
+      const msg = messageFor(c);
+      show(c, msg);
+      return !msg;
+    };
+
+    controls.forEach((c) => {
+      c.addEventListener("blur", () => {
+        if (c.value || c.getAttribute("aria-invalid") === "true") validate(c);
+      });
+      c.addEventListener("input", () => {
+        if (c.getAttribute("aria-invalid") === "true") validate(c);
+      });
+      c.addEventListener("change", () => {
+        if (c.getAttribute("aria-invalid") === "true") validate(c);
+      });
+    });
+
+    const setLoading = (loading: boolean) => {
+      submitBtn.disabled = loading;
+      submitBtn.setAttribute("aria-busy", String(loading));
+      submitBtn.querySelector("[data-submit-icon]")?.classList.toggle("hidden", loading);
+      submitBtn.querySelector("[data-submit-spinner]")?.classList.toggle("hidden", !loading);
+      const label = submitBtn.querySelector("[data-submit-label]");
+      if (label) label.textContent = loading ? submitBtn.dataset.labelSending! : submitBtn.dataset.labelIdle!;
+    };
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formError.classList.add("hidden");
+
+      const results = controls.map((c) => validate(c));
+      if (results.includes(false)) {
+        controls.find((c) => c.getAttribute("aria-invalid") === "true")?.focus();
+        return;
+      }
+
+      // honeypot filled => bot: pretend it worked, send nothing
+      const trap = form.querySelector<HTMLInputElement>('input[name="website"]');
+      const fd = new FormData(form);
+      const val = (k: string) => String(fd.get(k) ?? "").trim();
+
+      setLoading(true);
+      try {
+        if (!trap?.value) {
+          await submitLead({
+            name: val("name"),
+            company: val("company"),
+            entityType: val("entityType"),
+            phone: val("phone"),
+            email: val("email"),
+            interest: val("interest"),
+            message: val("message"),
+            consent: true,
+            source: "web-home",
+          });
+        }
+        wrapper.hidden = true;
+        success.hidden = false;
+        success.focus();
+        form.reset();
+        controls.forEach((c) => c.removeAttribute("aria-invalid"));
+      } catch (err) {
+        console.error(err);
+        formError.classList.remove("hidden");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    success.querySelector("[data-lead-reset]")?.addEventListener("click", () => {
+      success.hidden = true;
+      wrapper.hidden = false;
+      form.querySelector<HTMLInputElement>("input[name=name]")?.focus();
+    });
+
+    /* Prefill: ?email= from the hero form, and the "Interés" from CTA buttons (data-interest). */
+    const emailParam = new URLSearchParams(location.search).get("email");
+    const emailField = form.querySelector<HTMLInputElement>("input[name=email]");
+    if (emailParam && emailField) emailField.value = emailParam;
+
+    document.addEventListener("click", (e) => {
+      const trigger = (e.target as HTMLElement).closest<HTMLElement>("[data-interest]");
+      const value = trigger?.dataset.interest;
+      if (!value) return;
+      const select = form.querySelector<HTMLSelectElement>("select[name=interest]");
+      if (select && Array.from(select.options).some((o) => o.value === value)) {
+        select.value = value;
+        validate(select);
+      }
+    });
+  }
+</script>

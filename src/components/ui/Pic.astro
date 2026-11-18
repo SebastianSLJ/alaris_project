@@ -1,0 +1,24 @@
+---
+/* Renders either an imported image (optimized by astro:assets) or a plain URL/path string. */
+import { Image } from "astro:assets";
+import type { Img } from "../../content/home";
+
+interface Props {
+  src: Img;
+  alt: string;
+  class?: string;
+  widths?: number[];
+  sizes?: string;
+  loading?: "lazy" | "eager";
+}
+
+const { src, alt, class: className = "", widths, sizes, loading = "lazy" } = Astro.props;
+---
+
+{
+  typeof src === "string" ? (
+    <img src={src} alt={alt} loading={loading} decoding="async" class={className} />
+  ) : (
+    <Image src={src} alt={alt} widths={widths} sizes={sizes} loading={loading} class={className} />
+  )
+}
