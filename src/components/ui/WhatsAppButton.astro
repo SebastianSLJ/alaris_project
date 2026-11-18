@@ -11,21 +11,33 @@ const href = `https://wa.me/${whatsapp.number}?text=${encodeURIComponent(whatsap
     target="_blank"
     rel="noopener noreferrer"
     aria-label={whatsapp.label}
-    class="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_24px_rgba(37,211,102,0.4)] transition-transform duration-200 hover:scale-105 focus-visible:outline-offset-4"
+    class="group relative flex h-14 w-14 items-center justify-center rounded-full wa-btn transition-transform duration-200 hover:scale-105 focus-visible:outline-offset-4"
   >
     <!-- pulse ring -->
     <span
       aria-hidden="true"
-      class="wa-pulse absolute inset-0 rounded-full bg-[#25D366]"
+      class="wa-pulse wa-btn absolute inset-0 rounded-full"
       style="animation: wa-pulse 2.4s ease-out infinite"></span>
     <Icon name="whatsapp" size={30} class="relative" />
 
     <!-- tooltip -->
     <span
       role="tooltip"
-      class="pointer-events-none absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-negro px-3 py-2 text-sm font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
+      data-theme="dark"
+      class="pointer-events-none absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-elevated px-3 py-2 text-sm font-medium text-fg opacity-0 shadow-float transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100"
     >
       {whatsapp.tooltip}
     </span>
   </a>
 </div>
+
+<style>
+  /* third-party brand color (WhatsApp green), defined once as the --whatsapp primitive */
+  .wa-btn {
+    background-color: var(--whatsapp);
+    color: var(--white);
+  }
+  a.wa-btn {
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--whatsapp) 40%, transparent);
+  }
+</style>

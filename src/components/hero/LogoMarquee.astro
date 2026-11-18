@@ -20,11 +20,11 @@ const sets = [false, true];
 ---
 
 <section aria-label={label} class:list={["mx-auto w-[calc(100%-2rem)] max-w-[880px]", className]}>
-  <p class="mb-3 text-center text-xs font-medium uppercase tracking-[0.12em] text-onix">{label}</p>
+  <p class="mb-3 text-center text-xs font-medium uppercase tracking-[0.12em] text-fg-muted">{label}</p>
 
   <!-- 880px container, 48px tall, edges faded with a mask -->
   <div class="lm-view h-12 overflow-hidden">
-    <div class="lm-track flex w-max items-center text-carbon opacity-70">
+    <div class="lm-track flex w-max items-center text-fg opacity-70">
       {
         sets.map((isCopy) => (
           <ul class="flex shrink-0 items-center gap-14 pr-14" aria-hidden={isCopy ? "true" : undefined}>
@@ -54,8 +54,8 @@ const sets = [false, true];
 
 <style>
   .lm-view {
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0%, #000 15%, #000 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, var(--fg) 15%, var(--fg) 85%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, var(--fg) 15%, var(--fg) 85%, transparent 100%);
   }
   .lm-track {
     animation: lm-scroll 30s linear infinite; /* right -> left */

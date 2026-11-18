@@ -39,7 +39,7 @@ const { slides, interval = 3500, class: className = "", label = "Equipos", dotLa
           <!-- soft elliptical ground shadow -->
           <span
             aria-hidden="true"
-            class="absolute -bottom-4 left-1/2 h-8 w-[84%] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(2,8,23,0.5)_0%,rgba(2,8,23,0.22)_45%,rgba(2,8,23,0)_72%)] blur-[5px]"
+            class="absolute -bottom-4 left-1/2 h-8 w-[84%] -translate-x-1/2 rounded-full hc-ground blur-[5px]"
           />
           <Image
             src={s.src}
@@ -63,12 +63,12 @@ const { slides, interval = 3500, class: className = "", label = "Equipos", dotLa
           data-dot={i}
           aria-label={`${dotLabel} ${i + 1}`}
           aria-current={i === 0 ? "true" : "false"}
-          class="flex h-10 items-center px-1.5 focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-azul"
+          class="flex h-10 items-center px-1.5 focus-visible:outline-offset-[-4px]"
         >
           <span
             data-pip
             data-active={i === 0 ? "true" : "false"}
-            class="block h-2 w-2 rounded-full bg-onix transition-[width,background-color] duration-300 data-[active=true]:w-6 data-[active=true]:bg-azul"
+            class="block h-2 w-2 rounded-full bg-fg-muted transition-[width,background-color] duration-300 data-[active=true]:w-6 data-[active=true]:bg-accent"
           />
         </button>
       ))
@@ -78,6 +78,15 @@ const { slides, interval = 3500, class: className = "", label = "Equipos", dotLa
 
 <style>
   /* slide / fade, 120px, 700ms ease-in-out (plain CSS so it works on Tailwind v3 and v4) */
+  /* soft elliptical ground shadow under each product */
+  .hc-ground {
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--shadow-color) 50%, transparent) 0%,
+      color-mix(in srgb, var(--shadow-color) 22%, transparent) 45%,
+      transparent 72%
+    );
+  }
   .hc-slide {
     pointer-events: none;
     transition:

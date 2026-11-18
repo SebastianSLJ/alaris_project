@@ -5,7 +5,7 @@ import Icon from "../ui/Icon.astro";
 import { footer, site } from "../../content/home";
 ---
 
-<footer class="on-dark bg-carbon text-white">
+<footer data-theme="dark">
   <div class="container-x py-16 lg:py-20">
     <div class="grid gap-12 lg:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))] lg:gap-10">
       <!-- brand -->
@@ -13,8 +13,8 @@ import { footer, site } from "../../content/home";
         <a href="#hero" aria-label={site.name} class="inline-block">
           <Image src={logo} alt={site.name} height={80} class="block h-10 w-auto" />
         </a>
-        <p class="mt-5 max-w-[320px] text-[15px] leading-[1.6] text-white/70">{site.tagline}</p>
-        <p class="mt-4 flex items-center gap-2 text-[15px] text-white/70">
+        <p class="mt-5 max-w-[320px] text-[15px] leading-[1.6] text-fg-muted">{site.tagline}</p>
+        <p class="mt-4 flex items-center gap-2 text-[15px] text-fg-muted">
           <Icon name="map-pin" size={16} />
           {site.location}
         </p>
@@ -23,11 +23,11 @@ import { footer, site } from "../../content/home";
       {
         footer.columns.map((col) => (
           <nav aria-label={col.title}>
-            <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-white">{col.title}</h2>
+            <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-fg">{col.title}</h2>
             <ul class="mt-5 space-y-3">
               {col.links.map((l) => (
                 <li>
-                  <a href={l.href} class="text-[15px] text-white/70 transition-colors hover:text-white">
+                  <a href={l.href} class="text-[15px] text-fg-muted transition-colors hover:text-fg">
                     {l.label}
                   </a>
                 </li>
@@ -39,7 +39,7 @@ import { footer, site } from "../../content/home";
 
       <!-- social -->
       <div>
-        <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-white">{footer.socialTitle}</h2>
+        <h2 class="text-sm font-semibold uppercase tracking-[0.12em] text-fg">{footer.socialTitle}</h2>
         <ul class="mt-5 space-y-3">
           {
             footer.social.map((s) => (
@@ -48,9 +48,9 @@ import { footer, site } from "../../content/home";
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group inline-flex items-center gap-3 text-[15px] text-white/70 transition-colors hover:text-white"
+                  class="group inline-flex items-center gap-3 text-[15px] text-fg-muted transition-colors hover:text-fg"
                 >
-                  <span class="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 transition-colors group-hover:border-white/40 group-hover:bg-white/10">
+                  <span class="flex h-9 w-9 items-center justify-center rounded-full border border-line transition-colors group-hover:border-field group-hover:bg-fg/10">
                     <Icon name={s.icon} size={17} />
                   </span>
                   {s.label}
@@ -62,11 +62,11 @@ import { footer, site } from "../../content/home";
       </div>
     </div>
 
-    <div class="mt-14 flex flex-col gap-3 border-t border-white/10 pt-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mt-14 flex flex-col gap-3 border-t border-line pt-6 text-sm text-fg-muted sm:flex-row sm:items-center sm:justify-between">
       <p>{footer.copyright}</p>
       {
         site.privacyPolicyHref ? (
-          <a href={site.privacyPolicyHref} class="underline underline-offset-4 transition-colors hover:text-white">
+          <a href={site.privacyPolicyHref} class="underline underline-offset-4 transition-colors hover:text-fg">
             {footer.privacy}
           </a>
         ) : (

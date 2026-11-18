@@ -8,6 +8,10 @@ import pump1 from "../assets/hero/pump-1.png";
 import pump2 from "../assets/hero/pump-2.png";
 import pump3 from "../assets/hero/pump-3.png";
 import gasNetworkRender from "../assets/renders/gas-network.png";
+/* TEMPORAL — logos de vista previa, NO son marcas aliadas confirmadas. No publicar. */
+import previewBayer from "../assets/Brands/Bayer-Logo-2010.png";
+import previewBoston from "../assets/Brands/boston-scientific-logo-png-transparent.png";
+import previewAbbott from "../assets/Brands/images.png";
 
 /** Imagen local importada, o una URL/ruta pública (/logos/x.svg). */
 export type Img = ImageMetadata | string;
@@ -261,8 +265,12 @@ export interface PartnerItem {
   kind: "brand" | "certification";
   name: string;
   status: string;
-  /** Logo verificado (import local o "/logos/marca.svg"). Si existe, reemplaza al icono dentro del sector. */
-  logo?: Img;
+  /** Logo verificado (import local). Si existe, reemplaza al icono dentro del sector. */
+  logo?: ImageMetadata;
+  /** Recorte del logo en píxeles de la imagen [x, y, ancho, alto], para quitar márgenes vacíos. */
+  logoCrop?: [number, number, number, number];
+  /** "light" si la imagen trae fondo blanco opaco (se invierte para recortarlo); por defecto, fondo transparente. */
+  logoBackground?: "transparent" | "light";
 }
 
 export const partners = {
@@ -280,9 +288,11 @@ export const partners = {
    * PENDIENTE: reemplazar los placeholders solo con información verificada (nombre, `logo`, `status`).
    */
   items: [
-    { id: "marca-1", kind: "brand", name: "Marca aliada", status: "Logo pendiente de aprobación" },
-    { id: "marca-2", kind: "brand", name: "Marca aliada", status: "Logo pendiente de aprobación" },
-    { id: "marca-3", kind: "brand", name: "Marca aliada", status: "Logo pendiente de aprobación" },
+    /* TEMPORAL — vista previa con logos de prueba. Restaurar a los placeholders antes de publicar:
+       { id: "marca-N", kind: "brand", name: "Marca aliada", status: "Logo pendiente de aprobación" } */
+    { id: "marca-1", kind: "brand", name: "Bayer", status: "Vista previa · marca no confirmada", logo: previewBayer, logoCrop: [543, 0, 1411, 1406] },
+    { id: "marca-2", kind: "brand", name: "Boston Scientific", status: "Vista previa · marca no confirmada", logo: previewBoston, logoCrop: [73, 762, 2327, 847] },
+    { id: "marca-3", kind: "brand", name: "Abbott", status: "Vista previa · marca no confirmada", logo: previewAbbott, logoCrop: [0, 158, 447, 130], logoBackground: "light" },
     { id: "certificaciones", kind: "certification", name: "Certificaciones", status: "Documentación pendiente de verificación" },
   ] as PartnerItem[],
 };

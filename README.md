@@ -14,7 +14,8 @@ npm run check     # tipos (astro check)
 | Qué | Dónde |
 |---|---|
 | **Todo el copy y los datos** (textos, stats, logos, redes, teléfono…) | `src/content/home.ts` |
-| Colores y tipografías (tokens) | `src/styles/global.css` (`@theme`) |
+| Colores (primitivos, temas y tokens) y tipografías | `src/styles/global.css` |
+| Tema de cada sección | atributo `data-theme="light|tint|dark"` en su `<section>` |
 | Orden de secciones | `src/pages/index.astro` |
 | Envío del formulario | `src/lib/submitLead.ts` + `PUBLIC_LEADS_ENDPOINT` (ver `.env.example`) |
 | Briefs de los renders 3D | `docs/render-briefs.md` |
@@ -45,7 +46,7 @@ src/
 
 ## Notas de diseño
 
-- Paleta: Carbon `#343434`, Azul `#005CFF` (solo CTAs, enlaces y acentos), Metal `#E6E6ED`, Cinza `#DCDCDE`, Ônix `#A8A5A0`.
+- Color: 3 temas de sección (`light` blanco, `tint` gris lavanda `#E6E6ED`, `dark` azul oscuro `#0A0F1E`). Los componentes solo usan tokens semánticos (`bg-bg`, `bg-elevated`, `text-fg`, `text-fg-muted`, `border-line`, `text-accent`, `bg-accent-fill`…); los únicos valores crudos están en los primitivos de `global.css`. Ritmo: nunca dos secciones seguidas con el mismo tema y máximo 2 claras antes de una oscura.
 - Layouts fluidos (`.container-x` + grid/flex). Hoy está pensado para escritorio; el móvil funciona pero no está pulido.
 - Animaciones: `data-reveal` en cualquier elemento. Respetan `prefers-reduced-motion` y no ocultan nada si no hay JS.
 - Los botones con `data-interest` preseleccionan el campo "Interés" del formulario.

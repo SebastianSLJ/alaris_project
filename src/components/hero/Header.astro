@@ -1,6 +1,6 @@
 ---
 import { Image } from "astro:assets";
-import logo from "../../assets/hero/logo-light.png"; // light logo version (the pill is black)
+import logo from "../../assets/hero/logo-light.png"; // light logo version (the pill uses the dark theme)
 import { nav } from "../../content/home";
 
 interface NavLink {
@@ -17,7 +17,7 @@ interface Props {
 const { links = nav.links, ctaHref = nav.cta.href, ctaLabel = nav.cta.label } = Astro.props;
 
 const linkClass =
-  "text-sm font-medium text-white transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+  "text-sm font-medium text-fg transition-opacity hover:opacity-70 focus-visible:outline-offset-4";
 ---
 
 <!--
@@ -27,7 +27,8 @@ const linkClass =
 <header data-site-header data-label-open={nav.openMenu} data-label-close={nav.closeMenu} class="pointer-events-none fixed inset-x-0 top-4 z-50 px-4 lg:top-6">
   <div class="pointer-events-auto relative mx-auto max-w-[1200px]">
     <div
-      class="flex h-[60px] items-center justify-between rounded-full bg-negro pl-5 pr-2 shadow-[0_10px_30px_rgba(0,0,0,0.18)] lg:pl-7 lg:pr-3"
+      data-theme="dark"
+      class="flex h-[60px] items-center justify-between rounded-full bg-elevated pl-5 pr-2 shadow-float lg:pl-7 lg:pr-3"
     >
       <!-- Logo: 32px on mobile, 36px on desktop -->
       <a href="/" aria-label={nav.homeLabel} class="shrink-0">
@@ -51,7 +52,7 @@ const linkClass =
         </nav>
         <a
           href={ctaHref}
-          class="inline-flex h-10 items-center rounded-full bg-azul px-5 text-sm font-medium text-white transition-colors hover:bg-azul-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          class="inline-flex h-10 items-center rounded-full bg-accent-fill px-5 text-sm font-medium text-accent-contrast transition-colors hover:bg-accent-fill-hover focus-visible:outline-offset-2"
         >
           {ctaLabel}
         </a>
@@ -64,9 +65,9 @@ const linkClass =
         aria-expanded="false"
         aria-controls="mobile-menu"
         aria-label={nav.openMenu}
-        class="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:hidden"
+        class="flex h-11 w-11 items-center justify-center rounded-full text-fg focus-visible:outline-offset-2 lg:hidden"
       >
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.75" stroke-linecap="round">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
           <path d="M3 5.5h14M3 10h14M3 14.5h14"></path>
         </svg>
       </button>
@@ -76,23 +77,24 @@ const linkClass =
     <div
       id="mobile-menu"
       hidden
-      class="absolute inset-x-0 top-full mt-2 rounded-3xl bg-negro px-6 pb-5 pt-3 shadow-[0_10px_30px_rgba(0,0,0,0.18)] lg:hidden"
+      data-theme="dark"
+      class="absolute inset-x-0 top-full mt-2 rounded-3xl bg-elevated px-6 pb-5 pt-3 shadow-float lg:hidden"
     >
       <ul>
         {
           links.map((l) => (
             <li>
-              <a href={l.href} class="flex h-11 items-center text-base font-medium text-white transition-opacity hover:opacity-70">
+              <a href={l.href} class="flex h-11 items-center text-base font-medium text-fg transition-opacity hover:opacity-70">
                 {l.label}
               </a>
             </li>
           ))
         }
       </ul>
-      <div class="my-2 h-px bg-cinza/20"></div>
+      <div class="my-2 h-px bg-line"></div>
       <a
         href={ctaHref}
-        class="mt-2 flex h-11 w-full items-center justify-center rounded-full bg-azul text-sm font-medium text-white transition-colors hover:bg-azul-dark"
+        class="mt-2 flex h-11 w-full items-center justify-center rounded-full bg-accent-fill text-sm font-medium text-accent-contrast transition-colors hover:bg-accent-fill-hover"
       >
         {ctaLabel}
       </a>

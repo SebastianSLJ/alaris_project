@@ -11,17 +11,18 @@ const policyHref = site.privacyPolicyHref;
 <section
   id={contact.id}
   aria-labelledby="contact-title"
-  class="on-dark relative overflow-hidden bg-negro py-20 text-white lg:py-28"
+  data-theme="tint"
+  class="relative overflow-hidden py-20 lg:py-28"
 >
   <!-- ambient glow -->
   <span
     aria-hidden="true"
-    class="pointer-events-none absolute -left-40 top-0 h-[520px] w-[520px] rounded-full bg-azul/20 blur-[140px]"></span>
+    class="pointer-events-none absolute -left-40 top-0 h-[520px] w-[520px] rounded-full bg-accent-fill/10 blur-[140px]"></span>
 
   <div class="container-x relative grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,620px)] lg:gap-20">
     <!-- ───── Left: intro + contact items ───── -->
     <div>
-      <SectionHeading id="contact-title" title={contact.title} description={contact.description} tone="dark" />
+      <SectionHeading id="contact-title" title={contact.title} description={contact.description} />
 
       <ul class="mt-10 space-y-3" data-reveal style="--d:150ms">
         {
@@ -31,14 +32,14 @@ const policyHref = site.privacyPolicyHref;
                 href={it.href}
                 target={it.href.startsWith("http") ? "_blank" : undefined}
                 rel={it.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                class="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-white/25 hover:bg-white/[0.07]"
+                class="group flex items-center gap-4 rounded-2xl border border-line bg-elevated p-4 transition-all hover:border-field hover:shadow-card"
               >
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-azul text-white">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-fill text-accent-contrast">
                   <Icon name={it.icon} size={22} />
                 </span>
                 <span class="min-w-0">
-                  <span class="block text-xs font-semibold uppercase tracking-[0.12em] text-white/60">{it.label}</span>
-                  <span class="mt-0.5 block break-words text-lg font-medium text-white">{it.value}</span>
+                  <span class="block text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">{it.label}</span>
+                  <span class="mt-0.5 block break-words text-lg font-medium text-fg">{it.value}</span>
                 </span>
               </a>
             </li>
@@ -46,29 +47,29 @@ const policyHref = site.privacyPolicyHref;
         }
       </ul>
 
-      <p data-reveal style="--d:200ms" class="mt-6 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-[15px] leading-[1.55] text-white/75">
-        <Icon name="clipboard-list" size={20} class="mt-0.5 shrink-0 text-white/70" />
+      <p data-reveal style="--d:200ms" class="mt-6 flex items-start gap-3 rounded-2xl border border-line p-4 text-[15px] leading-[1.55] text-fg-muted">
+        <Icon name="clipboard-list" size={20} class="mt-0.5 shrink-0 text-fg-muted" />
         {contact.note}
       </p>
     </div>
 
     <!-- ───── Right: form card ───── -->
-    <div data-reveal style="--d:100ms" class="rounded-3xl bg-white p-6 text-carbon shadow-[0_40px_80px_-30px_rgba(0,0,0,0.7)] sm:p-9">
+    <div data-reveal style="--d:100ms" data-theme="light" class="rounded-3xl p-6 shadow-card sm:p-9">
       <div data-lead-wrapper>
         <h3 class="font-display text-3xl font-medium tracking-[-0.01em]">{f.title}</h3>
-        <p class="mt-1.5 text-sm text-carbon/65">{f.hint}</p>
+        <p class="mt-1.5 text-sm text-fg-muted">{f.hint}</p>
 
         <form data-lead-form data-errors={JSON.stringify(f.errors)} novalidate class="mt-7 space-y-5">
           <div class="grid gap-5 sm:grid-cols-2">
             <div>
               <label for="lead-name" class="mb-1.5 block text-sm font-medium">{f_.name.label} <span aria-hidden="true">*</span></label>
               <input id="lead-name" name="name" type="text" autocomplete="name" required placeholder={f_.name.placeholder} class="field-control" aria-describedby="lead-name-error" />
-              <p id="lead-name-error" data-error-for="name" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+              <p id="lead-name-error" data-error-for="name" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
             </div>
             <div>
               <label for="lead-company" class="mb-1.5 block text-sm font-medium">{f_.company.label} <span aria-hidden="true">*</span></label>
               <input id="lead-company" name="company" type="text" autocomplete="organization" required placeholder={f_.company.placeholder} class="field-control" aria-describedby="lead-company-error" />
-              <p id="lead-company-error" data-error-for="company" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+              <p id="lead-company-error" data-error-for="company" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
             </div>
             <div>
               <label for="lead-entityType" class="mb-1.5 block text-sm font-medium">{f_.entityType.label} <span aria-hidden="true">*</span></label>
@@ -76,19 +77,19 @@ const policyHref = site.privacyPolicyHref;
                 <option value="" disabled selected>{f_.entityType.placeholder}</option>
                 {f.entityTypes.map((t) => <option value={t}>{t}</option>)}
               </select>
-              <p id="lead-entityType-error" data-error-for="entityType" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+              <p id="lead-entityType-error" data-error-for="entityType" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
             </div>
             <div>
               <label for="lead-phone" class="mb-1.5 block text-sm font-medium">{f_.phone.label} <span aria-hidden="true">*</span></label>
               <input id="lead-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder={f_.phone.placeholder} class="field-control" aria-describedby="lead-phone-error" />
-              <p id="lead-phone-error" data-error-for="phone" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+              <p id="lead-phone-error" data-error-for="phone" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
             </div>
           </div>
 
           <div>
             <label for="lead-email" class="mb-1.5 block text-sm font-medium">{f_.email.label} <span aria-hidden="true">*</span></label>
             <input id="lead-email" name="email" type="email" autocomplete="email" required placeholder={f_.email.placeholder} class="field-control" aria-describedby="lead-email-error" />
-            <p id="lead-email-error" data-error-for="email" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            <p id="lead-email-error" data-error-for="email" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
           </div>
 
           <div>
@@ -97,7 +98,7 @@ const policyHref = site.privacyPolicyHref;
               <option value="" disabled selected>{f_.interest.placeholder}</option>
               {f.interests.map((o) => <option value={o.value}>{o.label}</option>)}
             </select>
-            <p id="lead-interest-error" data-error-for="interest" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            <p id="lead-interest-error" data-error-for="interest" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
           </div>
 
           <div>
@@ -111,31 +112,31 @@ const policyHref = site.privacyPolicyHref;
           </div>
 
           <div>
-            <label class="flex cursor-pointer items-start gap-3 text-sm leading-[1.5] text-carbon/80">
+            <label class="flex cursor-pointer items-start gap-3 text-sm leading-[1.5] text-fg-muted">
               <input
                 type="checkbox"
                 name="consent"
                 required
                 aria-describedby="lead-consent-error"
-                class="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[#005CFF]"
+                class="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-accent-fill"
               />
               <span>
                 {f.consent.before}
                 {
                   policyHref ? (
-                    <a href={policyHref} target="_blank" rel="noopener noreferrer" class="font-medium text-azul underline underline-offset-2">
+                    <a href={policyHref} target="_blank" rel="noopener noreferrer" class="font-medium text-accent underline underline-offset-2">
                       {f.consent.link}
                     </a>
                   ) : (
-                    <span class="font-medium text-azul underline underline-offset-2">{f.consent.link}</span>
+                    <span class="font-medium text-accent underline underline-offset-2">{f.consent.link}</span>
                   )
                 }{f.consent.after} <span aria-hidden="true">*</span>
               </span>
             </label>
-            <p id="lead-consent-error" data-error-for="consent" class="mt-1.5 hidden text-sm text-[#D92D20]" role="alert"></p>
+            <p id="lead-consent-error" data-error-for="consent" class="mt-1.5 hidden text-sm text-danger" role="alert"></p>
           </div>
 
-          <p data-form-error class="hidden rounded-xl border border-[#D92D20]/30 bg-[#D92D20]/5 px-4 py-3 text-sm text-[#B42318]" role="alert">
+          <p data-form-error class="hidden rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
             {f.errors.submit}
           </p>
 
@@ -144,24 +145,24 @@ const policyHref = site.privacyPolicyHref;
             data-submit
             data-label-idle={f.submit}
             data-label-sending={f.sending}
-            class="group inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-azul text-base font-medium text-white shadow-[0_8px_20px_rgba(0,92,255,0.28)] transition-all duration-200 hover:bg-azul-dark hover:shadow-[0_12px_28px_rgba(0,92,255,0.38)] disabled:cursor-wait disabled:opacity-80"
+            class="group inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-accent-fill text-base font-medium text-accent-contrast shadow-accent transition-all duration-200 hover:bg-accent-fill-hover hover:shadow-accent-lg disabled:cursor-wait disabled:opacity-80"
           >
             <span data-submit-icon class="inline-flex"><Icon name="send" size={19} /></span>
             <span data-submit-spinner class="hidden animate-spin"><Icon name="loader" size={19} strokeWidth={2.2} /></span>
             <span data-submit-label>{f.submit}</span>
           </button>
-          <p class="text-center text-sm text-carbon/60">{f.helper}</p>
+          <p class="text-center text-sm text-fg-muted">{f.helper}</p>
         </form>
       </div>
 
       <!-- success -->
       <div data-lead-success hidden class="py-10 text-center" role="status" tabindex="-1">
-        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-azul/10 text-azul">
+        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
           <Icon name="check" size={30} strokeWidth={2.4} />
         </span>
         <h3 class="mt-6 font-display text-3xl font-medium tracking-[-0.01em]">{f.success.title}</h3>
-        <p class="mx-auto mt-3 max-w-[380px] text-base leading-[1.6] text-carbon/70">{f.success.text}</p>
-        <button type="button" data-lead-reset class="mt-7 text-[15px] font-semibold text-azul underline underline-offset-4 hover:text-azul-dark">
+        <p class="mx-auto mt-3 max-w-[380px] text-base leading-[1.6] text-fg-muted">{f.success.text}</p>
+        <button type="button" data-lead-reset class="mt-7 text-[15px] font-semibold text-accent underline underline-offset-4 hover:text-accent-fill-hover">
           {f.success.again}
         </button>
       </div>

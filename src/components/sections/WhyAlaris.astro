@@ -6,7 +6,7 @@ import { why } from "../../content/home";
 const fmt = (n: number) => n.toLocaleString("es-CO");
 ---
 
-<section id={why.id} aria-labelledby="why-title" class="bg-white py-20 lg:py-28">
+<section id={why.id} aria-labelledby="why-title" data-theme="light" class="py-20 lg:py-28">
   <div class="container-x">
     <SectionHeading id="why-title" title={why.title} description={why.description} />
 
@@ -15,19 +15,19 @@ const fmt = (n: number) => n.toLocaleString("es-CO");
       {
         why.cards.map((c, i) => (
           <div data-reveal style={`--d:${i * 100}ms`}>
-            <article class="group relative h-full overflow-hidden rounded-3xl border border-cinza bg-[linear-gradient(180deg,#FFFFFF_0%,#F6F6F9_100%)] p-8 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_12px_32px_-18px_rgba(10,10,10,0.18)] transition-all duration-300 hover:-translate-y-1.5 hover:border-azul/40 hover:shadow-[0_28px_48px_-24px_rgba(0,92,255,0.35)]">
+            <article class="group relative h-full overflow-hidden rounded-3xl border border-line bg-[linear-gradient(180deg,var(--bg)_0%,var(--bg-elevated)_100%)] p-8 shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:border-accent/40 hover:shadow-glow">
               <!-- soft glow on hover -->
               <span
                 aria-hidden="true"
-                class="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-azul/10 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
+                class="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-accent/10 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100"
               />
-              <span class="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-azul/10 text-azul ring-1 ring-azul/15 transition-colors duration-300 group-hover:bg-azul group-hover:text-white">
+              <span class="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent ring-1 ring-accent/15 transition-colors duration-300 group-hover:bg-accent-fill group-hover:text-accent-contrast">
                 <Icon name={c.icon} size={26} />
               </span>
-              <h3 class="relative mt-7 text-xl font-semibold tracking-[-0.01em] text-carbon">{c.title}</h3>
-              <p class="relative mt-3 text-base leading-[1.6] text-carbon/70">{c.description}</p>
+              <h3 class="relative mt-7 text-xl font-semibold tracking-[-0.01em] text-fg">{c.title}</h3>
+              <p class="relative mt-3 text-base leading-[1.6] text-fg-muted">{c.description}</p>
               {c.tag && (
-                <p class="relative mt-5 inline-flex items-center rounded-full bg-carbon/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-carbon/70">
+                <p class="relative mt-5 inline-flex items-center rounded-full bg-fg/[0.06] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-fg-muted">
                   {c.tag}
                 </p>
               )}
@@ -38,16 +38,16 @@ const fmt = (n: number) => n.toLocaleString("es-CO");
     </div>
 
     <!-- stats -->
-    <dl class="mt-14 grid gap-y-10 border-t border-cinza pt-12 sm:grid-cols-3 lg:mt-20">
+    <dl class="mt-14 grid gap-y-10 border-t border-line pt-12 sm:grid-cols-3 lg:mt-20">
       {
         why.stats.map((s, i) => (
-          <div data-reveal style={`--d:${i * 100}ms`} class:list={["flex flex-col sm:px-8", i > 0 && "sm:border-l sm:border-cinza", i === 0 && "sm:pl-0"]}>
-            <dt class="order-2 mt-4 text-base font-semibold text-carbon">{s.label}</dt>
+          <div data-reveal style={`--d:${i * 100}ms`} class:list={["flex flex-col sm:px-8", i > 0 && "sm:border-l sm:border-line", i === 0 && "sm:pl-0"]}>
+            <dt class="order-2 mt-4 text-base font-semibold text-fg">{s.label}</dt>
             <dd
               data-count
               data-value={s.value ?? ""}
               data-suffix={s.suffix ?? ""}
-              class="order-1 font-display text-6xl font-medium leading-none tracking-[-0.02em] text-carbon lg:text-[80px]"
+              class="order-1 font-display text-6xl font-medium leading-none tracking-[-0.02em] text-fg lg:text-[80px]"
             >
               {s.value === null ? why.statPlaceholder : `${fmt(s.value)}${s.suffix ?? ""}`}
             </dd>
